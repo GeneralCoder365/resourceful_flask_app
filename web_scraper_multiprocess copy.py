@@ -285,7 +285,7 @@ def top_results(i, bottom_session, hashmap_description_relevance, relevance_calc
 # global master_results
 # @profile
 def master_results(all_urls_to_search, dom_queue):
-    import relevance_analyzer
+    import relevance_analyzer_multiprocess
     
     # top_queue = multiprocessing.Queue()
     
@@ -302,7 +302,7 @@ def master_results(all_urls_to_search, dom_queue):
     
     with ThreadPool() as top_pool:
         # top_pool_starmap = top_pool.starmap_async(top_results, [(i, bottom_session, hashmap_description_relevance, relevance_analyzer.relevance_calculator) for i in range(len(all_urls_to_search))]).get()
-        top_pool_starmap = top_pool.starmap_async(top_results, [(i, bottom_session, hashmap_description_relevance, relevance_analyzer.result_relevance_calculator, all_urls_to_search) for i in range(len(all_urls_to_search))]).get()
+        top_pool_starmap = top_pool.starmap_async(top_results, [(i, bottom_session, hashmap_description_relevance, relevance_analyzer_multiprocess.result_relevance_calculator, all_urls_to_search) for i in range(len(all_urls_to_search))]).get()
 
         top_pool.terminate()
     

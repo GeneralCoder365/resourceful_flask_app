@@ -2,6 +2,7 @@ from calendar import c
 import re
 from collections import Counter
 from multiprocessing.pool import ThreadPool
+import multiprocessing
 
 
 # ! use once to download nltk data
@@ -155,42 +156,61 @@ def relevance_calculator(word_1, word_2):
     
     return comp_rating
 
+def sub_relevance_rater(j, tag, description_word, tags, word_relevance_ratings, tags_frequency, tags_prominence_iterator):
+    # print("DESCRIPTION WORD: ", description_word)
+    # print("TAG: ", tag)
+    # print("WORD: ", description_word, "; TAG: ", tag)
+    comp_rating = relevance_calculator(description_word, tag)
+    # print("COMP_RATING: ", comp_rating)
+    # print("TYPE COMP_RATING: ", type(comp_rating))
+    # print("tags_prominence_iterator before: ", tags_prominence_iterator)
+    # print("tags_frequency before: ", tags_frequency)
+    # ! https://towardsdatascience.com/in-10-minutes-web-scraping-with-beautiful-soup-and-selenium-for-data-professionals-8de169d36319
+    with tags_prominence_iterator.get_lock():
+        # print("TYPE j: ", type(j))
+        # print("WORD RELEVANCE RATINGS: ", word_relevance_ratings)
+        # print("TYPE word_relevance_ratings[j]: ", type(word_relevance_ratings[j]))
+        if (comp_rating > word_relevance_ratings[j]):
+            word_relevance_ratings[j] = comp_rating
+            # print("tags_prominence_iterator: ", tags_prominence_iterator)
+            # print("len(tags_frequency) - 1: ", (len(tags_frequency) - 1))
+            # if ((tags_prominence_iterator < (len(tags_frequency) - 1)) or (tags_prominence_iterator == 0)):
+            if ((tags_prominence_iterator.value != (len(tags_frequency) - 1)) or (tags_prominence_iterator.value == 0)):
+                tags_frequency.append(tag)
+                # tags_prominence_iterator += 1
+            else:
+                # print("tags_frequency_length: ", len(tags_frequency))
+                # print("tags_prominence_iterator: ", tags_prominence_iterator.value)
+                tags_frequency[tags_prominence_iterator.value] = tag
+                
+            if (tag == tags[-1]):
+                tags_prominence_iterator.value += 1
+            # print("tags_prominence_iterator after: ", tags_prominence_iterator.value)
+        # print("tags_frequency after: ", tags_frequency)
+
 def relevance_rater(tags, description):
     tags_frequency = []
     tags_prominence_iterator = 0
     
+    # word_relevance_ratings = [0] * len(description)
+    
+    word_relevance_manager = multiprocessing.Manager()
+    word_relevance_ratings = word_relevance_manager.list()
     word_relevance_ratings = [0] * len(description)
     
-    for i in range(len(description)):
-        # ! ThreadPool for each i?
-        for j in range(len(tags)):
-            description_word = description[i].strip()
-            tag = tags[j].strip()
-            print("DESCRIPTION WORD: ", description_word)
-            print("TAG: ", tag)
-            print("WORD: ", description_word, "; TAG: ", tag)
-            comp_rating = relevance_calculator(description_word, tag)
-            # print("COMP_RATING: ", comp_rating)
-            # print("tags_prominence_iterator before: ", tags_prominence_iterator)
-            # print("tags_frequency before: ", tags_frequency)
-            # ! https://towardsdatascience.com/in-10-minutes-web-scraping-with-beautiful-soup-and-selenium-for-data-professionals-8de169d36319
-            if (comp_rating > word_relevance_ratings[i]):
-                word_relevance_ratings[i] = comp_rating
-                # print("tags_prominence_iterator: ", tags_prominence_iterator)
-                # print("len(tags_frequency) - 1: ", (len(tags_frequency) - 1))
-                # if ((tags_prominence_iterator < (len(tags_frequency) - 1)) or (tags_prominence_iterator == 0)):
-                if ((tags_prominence_iterator != (len(tags_frequency) - 1)) or (tags_prominence_iterator == 0)):
-                    tags_frequency.append(tag)
-                    # tags_prominence_iterator += 1
-                else:
-                    # print("tags_frequency_length: ", len(tags_frequency))
-                    # print("tags_prominence_iterator: ", tags_prominence_iterator)
-                    tags_frequency[tags_prominence_iterator] = tag
-                    
-                if (tag == tags[-1]):
-                    tags_prominence_iterator += 1
-                # print("tags_prominence_iterator after: ", tags_prominence_iterator)
-            # print("tags_frequency after: ", tags_frequency)
+    tags_frequency_manager = multiprocessing.Manager()
+    tags_frequency = tags_frequency_manager.list()
+    tags_prominence_iterator = multiprocessing.Value('i', 0)
+    
+    # ! ADD THREADPOOL FOR EACH i
+    for i in range(len(tags)):
+        
+        tag = tags[i].strip()
+        
+        with ThreadPool() as relevance_rater_pool:
+            relevance_rater_starmap = relevance_rater_pool.starmap_async(sub_relevance_rater, [(j, tag, description[j].strip(), tags, word_relevance_ratings, tags_frequency, tags_prominence_iterator) for j in range(len(description))]).get()
+            
+            relevance_rater_pool.terminate()
     
     divider = (len(description)**2)/len(tags) #["exam", "sits", "C"]: 0.36; ["exam", "boobs", "favourite"]: 0.54 for "This is_. a test. What if tits are the best things in the world?
         # "This is_. a test. What if tits are the best things in the world?" has significant words: ['test', 'tits', 'best', 'things', 'world']
@@ -222,9 +242,11 @@ def related_words_calculator(word_1, word_2):
 
 # print(result_relevance_calculator(["exam", "boobs", "favourite"], "This is_. a test. What if tits are the best things in the world?"))
 
-# import time
-# start_time = time.time()
-# print(result_relevance_calculator(["math"], '''Students enter our math classrooms with anxiety about performance, misconceptions about what math is, and a lack of confidence that can limit their ability to have meaningful learning experiences. In response to this challenge, Stanford researcher Jo Boaler has focused on 
-# some key tenants to help students transform their mindset to find more success with math teaching and learning. Some of these mindset shifts include recognizing that: (1) anyone can learn math, (2) making mistakes is essential to learning, (3) math is about fluency and not speed, (4) math is visual, (5) being successful in math requires creativity, flexibility, problem solving, and number sense.\r\n\r\nIn order to start building these mindsets, Boaler advocates, among other strategies, that students build a habit of being mathematical through common routines, tasks, and puzzles.\r\n\r\nThis guide will introduce 3 of those routines/puzzles including tips on how to successfully implement these tasks in a face to face, blended, or distance learning setting.\r\n\r\nThe Need\r\nMany adult education students had difficult (and often negative) experiences with math teaching and learning during their time in the K-12 system. Without addressing their math trauma and helping them to build a mathematical mindset, our students may continue to struggle and be limited in their ability to succeed in math class, on the equivalency exam, and in college and 
-# career settings. So our program views math mindsets as the greatest challenge and largest opportunity for transforming the experience our students have when returning to school. Without this shift, we could share the best lesson plans, the most engaging OERs, and the most transformative teachers, and students will continue to be held back by self-limiting perceptions about math and about their ability to succeed.'''))
-# print("Process finished --- %s seconds ---" % (time.time() - start_time))
+
+# if __name__ == '__main__':
+#     import time
+#     start_time = time.time()
+#     print(result_relevance_calculator(["math"], '''Students enter our math classrooms with anxiety about performance, misconceptions about what math is, and a lack of confidence that can limit their ability to have meaningful learning experiences. In response to this challenge, Stanford researcher Jo Boaler has focused on 
+#     some key tenants to help students transform their mindset to find more success with math teaching and learning. Some of these mindset shifts include recognizing that: (1) anyone can learn math, (2) making mistakes is essential to learning, (3) math is about fluency and not speed, (4) math is visual, (5) being successful in math requires creativity, flexibility, problem solving, and number sense.\r\n\r\nIn order to start building these mindsets, Boaler advocates, among other strategies, that students build a habit of being mathematical through common routines, tasks, and puzzles.\r\n\r\nThis guide will introduce 3 of those routines/puzzles including tips on how to successfully implement these tasks in a face to face, blended, or distance learning setting.\r\n\r\nThe Need\r\nMany adult education students had difficult (and often negative) experiences with math teaching and learning during their time in the K-12 system. Without addressing their math trauma and helping them to build a mathematical mindset, our students may continue to struggle and be limited in their ability to succeed in math class, on the equivalency exam, and in college and 
+#     career settings. So our program views math mindsets as the greatest challenge and largest opportunity for transforming the experience our students have when returning to school. Without this shift, we could share the best lesson plans, the most engaging OERs, and the most transformative teachers, and students will continue to be held back by self-limiting perceptions about math and about their ability to succeed.'''))
+#     print("Process finished --- %s seconds ---" % (time.time() - start_time))
