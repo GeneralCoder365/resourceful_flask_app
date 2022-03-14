@@ -195,8 +195,8 @@ def relevance_rater(tags, description):
     # word_relevance_ratings = [0] * len(description)
     
     word_relevance_manager = multiprocessing.Manager()
-    word_relevance_ratings = word_relevance_manager.list()
     word_relevance_ratings = [0] * len(description)
+    word_relevance_ratings = word_relevance_manager.list(word_relevance_ratings)
     
     tags_frequency_manager = multiprocessing.Manager()
     tags_frequency = tags_frequency_manager.list()
