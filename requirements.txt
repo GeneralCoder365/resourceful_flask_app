@@ -107,3 +107,7 @@ wasabi==0.9.0
 llvmlit==0.38.0
 numba==0.55.1
 en-core-web-lg==3.2.0
+bs4==0.0.1
+futures==2.2.0
+goslate==1.5.2
+pydictionary==2.0.1

@@ -56,75 +56,7 @@ def synonyms_generator(word):
 # print(synonyms_generator('dog'))
 
 
-# ! SPACY MOST SIMILAR WORDS GENERATION (closest thing to finding semantically similar words and not just computing semantic similarity)
-# https://towardsdatascience.com/how-to-build-a-fast-most-similar-words-method-in-spacy-32ed104fe498
 
-@jit(nopython=True)
-def cosine_similarity_numba(u:np.ndarray, v:np.ndarray):
-    assert(u.shape[0] == v.shape[0])
-    uv = 0
-    uu = 0
-    vv = 0
-    for i in range(u.shape[0]):
-        uv += u[i]*v[i]
-        uu += u[i]*u[i]
-        vv += v[i]*v[i]
-    cos_theta = 1
-    if uu != 0 and vv != 0:
-        cos_theta = uv/np.sqrt(uu*vv)
-    print("cos_theta: ", cos_theta)
-    return cos_theta
-
-def spacy_most_similar_words_generator(word, topn=5):
-    word = nlp.vocab[str(word)]
-    print(word)
-    # queries = [
-    #     w for w in word.vocab 
-    #     if w.is_lower == word.is_lower and w.prob >= -15 and np.count_nonzero(w.vector)
-    # ]
-    
-    queries = []
-    max_wprob = -10000
-    for w in word.vocab:
-        # print("w: ", w)
-        # print("w.lower: ", w.lower())
-        # print("w.prob: ", w.prob)
-        # print("w.vector: ", w.vector)
-        if ((w.is_lower == word.is_lower) and (w.prob >= -15) and (np.count_nonzero(w.vector))):
-        # if ((w.is_lower == word.is_lower) and (w.prob >= -20) and (np.count_nonzero(w.vector))):
-            queries.append(w)
-        # if (w.is_lower == word.is_lower):
-        #     print("is_lower")
-        if (w.prob >= -15):
-            print("prob")
-        if (w.prob > max_wprob):
-            max_wprob = w.prob
-        if (w.prob == -20):
-            print(w)
-    print("max_wprob: ", max_wprob)
-    print(queries)
-    by_similarity = sorted(queries, key=lambda w: cosine_similarity_numba(w.vector, word.vector), reverse=True)
-    
-    spacy_most_similar_words_set = set()
-    
-    for w in by_similarity[:topn+1]:
-        if (w.lower_ != word.lower_):
-            print((w.lower_,w.similarity(word)))
-    
-    # return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
-print(spacy_most_similar_words_generator('dog'))
-
-# def most_similar(word, topn=5):
-#   word = nlp.vocab[str(word)]
-#   queries = [
-#       w for w in word.vocab 
-#       if w.is_lower == word.is_lower and w.prob >= -15 and np.count_nonzero(w.vector)
-#   ]
-
-#   by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
-#   return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
-
-# print(most_similar("dog", topn=3))
 
 
 def dom_relevant_words_generator(tag):    
@@ -155,3 +87,76 @@ def dom_relevant_words_generator(tag):
 #     print("BOOB") if "wrong" in dom_words_set else print("NOPE")
     
 #     print("Process finished --- %s seconds ---" % (time.time() - start_time))
+
+
+
+
+# ! SPACY MOST SIMILAR WORDS GENERATION (closest thing to finding semantically similar words and not just computing semantic similarity)
+# https://towardsdatascience.com/how-to-build-a-fast-most-similar-words-method-in-spacy-32ed104fe498
+
+# # # # @jit(nopython=True)
+# # # # def cosine_similarity_numba(u:np.ndarray, v:np.ndarray):
+# # # #     assert(u.shape[0] == v.shape[0])
+# # # #     uv = 0
+# # # #     uu = 0
+# # # #     vv = 0
+# # # #     for i in range(u.shape[0]):
+# # # #         uv += u[i]*v[i]
+# # # #         uu += u[i]*u[i]
+# # # #         vv += v[i]*v[i]
+# # # #     cos_theta = 1
+# # # #     if uu != 0 and vv != 0:
+# # # #         cos_theta = uv/np.sqrt(uu*vv)
+# # # #     print("cos_theta: ", cos_theta)
+# # # #     return cos_theta
+
+# # # # def spacy_most_similar_words_generator(word, topn=5):
+# # # #     word = nlp.vocab[str(word)]
+# # # #     print(word)
+# # # #     # queries = [
+# # # #     #     w for w in word.vocab 
+# # # #     #     if w.is_lower == word.is_lower and w.prob >= -15 and np.count_nonzero(w.vector)
+# # # #     # ]
+    
+# # # #     queries = []
+# # # #     max_wprob = -10000
+# # # #     for w in word.vocab:
+# # # #         # print("w: ", w)
+# # # #         # print("w.lower: ", w.lower())
+# # # #         # print("w.prob: ", w.prob)
+# # # #         # print("w.vector: ", w.vector)
+# # # #         if ((w.is_lower == word.is_lower) and (w.prob >= -15) and (np.count_nonzero(w.vector))):
+# # # #         # if ((w.is_lower == word.is_lower) and (w.prob >= -20) and (np.count_nonzero(w.vector))):
+# # # #             queries.append(w)
+# # # #         # if (w.is_lower == word.is_lower):
+# # # #         #     print("is_lower")
+# # # #         if (w.prob >= -15):
+# # # #             print("prob")
+# # # #         if (w.prob > max_wprob):
+# # # #             max_wprob = w.prob
+# # # #         if (w.prob == -20):
+# # # #             print(w)
+# # # #     print("max_wprob: ", max_wprob)
+# # # #     print(queries)
+# # # #     by_similarity = sorted(queries, key=lambda w: cosine_similarity_numba(w.vector, word.vector), reverse=True)
+    
+# # # #     spacy_most_similar_words_set = set()
+    
+# # # #     for w in by_similarity[:topn+1]:
+# # # #         if (w.lower_ != word.lower_):
+# # # #             print((w.lower_,w.similarity(word)))
+    
+# # # #     # return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
+# # # # print(spacy_most_similar_words_generator('dog'))
+
+# def most_similar(word, topn=5):
+#   word = nlp.vocab[str(word)]
+#   queries = [
+#       w for w in word.vocab 
+#       if w.is_lower == word.is_lower and w.prob >= -15 and np.count_nonzero(w.vector)
+#   ]
+
+#   by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
+#   return [(w.lower_,w.similarity(word)) for w in by_similarity[:topn+1] if w.lower_ != word.lower_]
+
+# print(most_similar("dog", topn=3))
