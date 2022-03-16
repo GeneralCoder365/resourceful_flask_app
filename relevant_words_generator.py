@@ -8,10 +8,10 @@ from nltk.corpus import wordnet
 from nltk.corpus.reader.wordnet import WordNetError
 next(wordnet.words()) # ! Helps prevent AttributeError: 'WordNetCorpusReader' object has no attribute '_LazyCorpusLoader__args'
 
-import spacy
-import numpy as np
-from numba import jit # using Numba to speed up cosine similarity calculation
-nlp = spacy.load('en_core_web_lg')
+# import spacy
+# import numpy as np
+# from numba import jit # using Numba to speed up cosine similarity calculation
+# nlp = spacy.load('en_core_web_lg')
 
 from memory_profiler import profile
 
@@ -56,7 +56,24 @@ def synonyms_generator(word):
 # print(synonyms_generator('dog'))
 
 
-
+# ! ACRONYM GENERATOR (use for multi-word tags)
+def acronym_generator(tag): # returns a string
+    # get all words
+    words = tag.split()
+    output = ""
+      
+    # iterate over words
+    for word in words:
+        
+        # get first letter of each word
+        output += word[0]
+          
+    # lowercase output
+    output = output.lower()
+    
+    # print(output)
+    return output
+# print(acronym_generator('dog cat'))
 
 
 def dom_relevant_words_generator(tag):    
@@ -65,13 +82,15 @@ def dom_relevant_words_generator(tag):
     # ignores funky characters and heiphens to avoid errors when generating similar words
     word_for_generation_comparison = re.sub(r'[^a-zA-Z ]', '', tag)
     
-    dom_words_set = set()
+    dom_words_set = {tag, word_for_generation_comparison}
+    # print(type(dom_words_set))
     
     # ! SET OF WORDS WITHIN *2* EDITS OF THE WORD_FOR_GENERATION_COMPARISON
     levenshtein_set = levenshtein_level_2(word_for_generation_comparison)
     dom_words_set.update(levenshtein_set)
     
     synonyms_set = synonyms_generator(word_for_generation_comparison)
+    # print(synonyms_set)
     dom_words_set.update(synonyms_set)
     
     # spacy_most_similar_words_set = spacy_most_similar_words_generator(word_for_generation_comparison)
@@ -79,14 +98,36 @@ def dom_relevant_words_generator(tag):
     
     return dom_words_set
 
-# if __name__ == '__main__':
-#     import time
-#     start_time = time.time()
+def master_relevant_words_generator(tags):
+    relevant_words_dict = {}
     
-#     dom_words_set = dom_relevant_words_generator("correct")
-#     print("BOOB") if "wrong" in dom_words_set else print("NOPE")
+    for tag in tags:
+        # removes leading and trailing whitespaces
+        tag = tag.lower().strip()
+        if (len(tag.split()) > 1):
+            acronym = acronym_generator(tag)
+            acronym_set = {acronym}
+            tag_set = dom_relevant_words_generator(tag)
+            relevant_words_dict[tag] = tag_set.union(acronym_set)
+            for sub_tag in tag.split():
+                sub_tag_set = dom_relevant_words_generator(sub_tag)
+                relevant_words_dict[sub_tag] = sub_tag_set
+        else:
+            tag_set = dom_relevant_words_generator(tag)
+            relevant_words_dict[tag] = tag_set
     
-#     print("Process finished --- %s seconds ---" % (time.time() - start_time))
+    return relevant_words_dict
+            
+# print(master_relevant_words_generator(['dog cat', 'dog cat', 'dog cat']))
+
+if __name__ == '__main__':
+    import time
+    start_time = time.time()
+    
+    master_relevant_words_dict = master_relevant_words_generator(['dog cat', 'hat', 'math'])
+    print(master_relevant_words_dict)
+    
+    print("Process finished --- %s seconds ---" % (time.time() - start_time))
 
 
 
