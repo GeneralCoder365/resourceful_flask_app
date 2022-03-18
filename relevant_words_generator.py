@@ -1,6 +1,8 @@
 import multiprocessing
 from multiprocessing.pool import ThreadPool
 
+from autocorrect import Speller
+
 import re
 from collections import Counter
 
@@ -56,6 +58,17 @@ def synonyms_generator(word):
 # print(synonyms_generator('dog'))
 
 
+# ! AUTO-CORRECT TO GENERATE RELEVANT WORDS
+# https://github.com/filyp/autocorrect
+def autocorrect_generator(tag):
+    spell = Speller(lang='en')
+    # print(spell(tag))
+    return {str(spell(tag)).lower()}
+
+# sp = autocorrect_generator('spainish')
+# print(sp)
+# print(type(sp))
+
 # ! ACRONYM GENERATOR (use for multi-word tags)
 def acronym_generator(tag): # returns a string
     # get all words
@@ -85,6 +98,9 @@ def dom_relevant_words_generator(tag):
     dom_words_set = {tag, word_for_generation_comparison}
     # print(type(dom_words_set))
     
+    autocorrect_set = autocorrect_generator(word_for_generation_comparison)
+    dom_words_set.update(autocorrect_set)
+    
     # ! SET OF WORDS WITHIN *2* EDITS OF THE WORD_FOR_GENERATION_COMPARISON
     levenshtein_set = levenshtein_level_2(word_for_generation_comparison)
     dom_words_set.update(levenshtein_set)
@@ -102,32 +118,34 @@ def master_relevant_words_generator(tags):
     relevant_words_dict = {}
     
     for tag in tags:
-        # removes leading and trailing whitespaces
-        tag = tag.lower().strip()
-        if (len(tag.split()) > 1):
-            acronym = acronym_generator(tag)
-            acronym_set = {acronym}
-            tag_set = dom_relevant_words_generator(tag)
-            relevant_words_dict[tag] = tag_set.union(acronym_set)
-            for sub_tag in tag.split():
-                sub_tag_set = dom_relevant_words_generator(sub_tag)
-                relevant_words_dict[sub_tag] = sub_tag_set
-        else:
-            tag_set = dom_relevant_words_generator(tag)
-            relevant_words_dict[tag] = tag_set
+        if (tag not in relevant_words_dict):
+            # removes leading and trailing whitespaces
+            tag = tag.lower().strip()
+            if (len(tag.split()) > 1):
+                acronym = acronym_generator(tag)
+                acronym_set = {acronym}
+                tag_set = dom_relevant_words_generator(tag)
+                relevant_words_dict[tag] = tag_set.union(acronym_set)
+                for sub_tag in tag.split():
+                    if (sub_tag not in relevant_words_dict):
+                        sub_tag_set = dom_relevant_words_generator(sub_tag)
+                        relevant_words_dict[sub_tag] = sub_tag_set
+            else:
+                tag_set = dom_relevant_words_generator(tag)
+                relevant_words_dict[tag] = tag_set
     
     return relevant_words_dict
             
 # print(master_relevant_words_generator(['dog cat', 'dog cat', 'dog cat']))
 
-if __name__ == '__main__':
-    import time
-    start_time = time.time()
+# if __name__ == '__main__':
+#     import time
+#     start_time = time.time()
     
-    master_relevant_words_dict = master_relevant_words_generator(['dog cat', 'hat', 'math'])
-    print(master_relevant_words_dict)
+#     master_relevant_words_dict = master_relevant_words_generator(['dog cat', 'hat', 'math'])
+#     # print(master_relevant_words_dict)
     
-    print("Process finished --- %s seconds ---" % (time.time() - start_time))
+#     print("Process finished --- %s seconds ---" % (time.time() - start_time))
 
 
 
