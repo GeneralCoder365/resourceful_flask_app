@@ -30,7 +30,18 @@ def text_cleaner(description):
 
 def relevant_words_checker(relevant_words_dict, description_array):
     # check if each description word exists in the relevant_words_dict
-    print()
+    tag_frequency = {}
+    relevance_score = 0 # ! WRITE RELEVANCE SCORE CALCULATION!!!
+	
+    for tag in relevance_words_dict.keys():
+	tags_frequency[tag] = 0
+    
+    for word in description_array:
+	for tag, related_words in relevance_words_dict.items():
+		if (word in related_words):
+			tags_frequency[tag] += 1
+    
+    return [relevance_score, tags_frequency]
 
 
 # https://newscatcherapi.com/blog/ultimate-guide-to-text-similarity-with-python
