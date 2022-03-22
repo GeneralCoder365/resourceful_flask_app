@@ -28,47 +28,6 @@ def text_cleaner(description):
     
     return description
 
-def relevant_words_checker(relevant_words_dict, description_array):
-    # check if each description word exists in the relevant_words_dict
-    tags_frequency = {}
-    relevance_score = 0 # ! WRITE RELEVANCE SCORE CALCULATION!!!
-	
-    # for tag in relevance_words_dict.keys():
-	# tags_frequency[tag] = 0
-    
-    for word in description_array:
-	for tag, related_words in relevance_words_dict.items():
-		if (word in related_words):
-			tags_frequency[tag] += 1
-    
-    return [relevance_score, tags_frequency]
-
-
-# https://newscatcherapi.com/blog/ultimate-guide-to-text-similarity-with-python
-# ! JACCARD SIMILARITY -> WORSE THAN COSINE AND EUCLIDEAN, DON'T USE!!!
-# number of shared words/total number of unique words between two arrays
-def jaccard_similarity(x, y):
-    # formats the text properly
-    if (type(x) != list):
-        x = [word.lower() for word in x.split()]
-    if (type(y) != list):
-        y = [word.lower() for word in y.split()]
-    x = [word.strip(' ') for word in x]
-    y = [word.strip(' ') for word in y]
-    
-    """ returns the jaccard similarity between two lists """
-    intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
-    union_cardinality = len(set.union(*[set(x), set(y)]))
-    
-    jaccard_similarity = intersection_cardinality/float(union_cardinality)
-    print("Jaccard similarity: ", jaccard_similarity)
-    
-    normalized_jaccard_similarity = jaccard_similarity/float(min(len(x), len(y))) # ! normalizes similarity from 0 to 
-    # ! max = 1/float(min(len(x), len(y)))
-    # ! min = 0
-    return normalized_jaccard_similarity
-# print(jaccard_similarity('below bob','below bob cat hat'))
-
 
 # ! EUCLIDEAN DISTANCE (most commonly used form of Minkowski Distance) -> WORSE THAN COSINE AT DEALING WITH DIFFERENT LENGTHS
 # uses Pythagorean Theorem to calculate the distance between two points (the two sentences)
@@ -93,6 +52,26 @@ def master_euclidean_distance_to_similarity(sentence_1, sentence_2):
 # print(master_euclidean_distance_to_similarity("my cat wears a hat", "my cat is wearing a hat"))
 
 
+# ! RELEVANT WORDS SCORER
+def relevant_words_checker(tags_to_compare_relevant_words_dict, description_array):
+    # check if each description word exists in the relevant_words_dict
+    tags_frequency = {}
+    relevant_words_score = 0
+	
+    # for tag in relevance_words_dict.keys():
+	# tags_frequency[tag] = 0
+    
+    for word in description_array:
+	for tag, related_words in tags_to_compare_relevant_words_dict.items():
+		if (word in related_words):
+			tags_frequency[tag] += 1
+			relevant_words_score += 1
+    
+    relevant_words_score = round((relevant_words_score/len(tags_to_compare_relevant_words_dict)), 2) # ! MIGHT NEED TO CHANGE!!!
+   
+    
+    return [relevant_words_score, tags_frequency]
+
 # ! COSINE SIMILARITY (cos of angle between vectors u & v) <-- cos theta = (u . v)/(|u||v|)
 def cosine_similarity(x,y):
     """ return cosine similarity between two lists """
@@ -104,7 +83,7 @@ def cosine_similarity(x,y):
 def master_cosine_similarity(tags, sentence_2):
     tag_sentence = " ".join(tags)
     embeddings = [nlp(sentence).vector for sentence in [tag_sentence, sentence_2]]
-    return cosine_similarity(embeddings[0], embeddings[1])
+    return cosine_similarity(embeddings[0], embeddings[1]) # max = 1, min = 0
 
 
 
@@ -175,3 +154,28 @@ if __name__ == '__main__':
     print(master_cosine_similarity("my cat wears a hat", "my cat is wearing a hat"))
     print(master_cosine_similarity("my cat wears a hat", "my cat wears a hat"))
     print("Process finished --- %s seconds ---" % (time.time() - start_time))
+
+# https://newscatcherapi.com/blog/ultimate-guide-to-text-similarity-with-python
+# ! JACCARD SIMILARITY -> WORSE THAN COSINE AND EUCLIDEAN, DON'T USE!!!
+# number of shared words/total number of unique words between two arrays
+def jaccard_similarity(x, y):
+    # formats the text properly
+    if (type(x) != list):
+        x = [word.lower() for word in x.split()]
+    if (type(y) != list):
+        y = [word.lower() for word in y.split()]
+    x = [word.strip(' ') for word in x]
+    y = [word.strip(' ') for word in y]
+    
+    """ returns the jaccard similarity between two lists """
+    intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
+    union_cardinality = len(set.union(*[set(x), set(y)]))
+    
+    jaccard_similarity = intersection_cardinality/float(union_cardinality)
+    print("Jaccard similarity: ", jaccard_similarity)
+    
+    normalized_jaccard_similarity = jaccard_similarity/float(min(len(x), len(y))) # ! normalizes similarity from 0 to 
+    # ! max = 1/float(min(len(x), len(y)))
+    # ! min = 0
+    return normalized_jaccard_similarity
+# print(jaccard_similarity('below bob','below bob cat hat'))
