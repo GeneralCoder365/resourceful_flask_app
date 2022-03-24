@@ -28,9 +28,13 @@ summary_list = ["about", "summary", "mission", "overview", "about this course", 
 
 # url = "https://www.coursera.org/learn/machine-learning"
 
-def master_query_maker(tags, dom_queue):
+def relevant_words_dict_generator(tags, dom_queue):
+    import relevant_words_generator
+    relevant_words_generator.master_relevant_words_generator(tags, dom_queue)
+
+def master_query_maker(tags, relevant_words_dict, dom_queue):
     import resource_finder
-    resource_finder.query_maker(tags, dom_queue)
+    resource_finder.query_maker(tags, relevant_words_dict, dom_queue)
 
 def master_web_crawler(search_queries, dom_queue):
     import web_crawler_multiprocess
@@ -160,6 +164,7 @@ def description_relevance_calculator(hashmap_description_relevance, relevance_ca
 
 def top_results(i, bottom_session, hashmap_description_relevance, relevance_calculator, all_urls_to_search):
     i_urls_to_search = all_urls_to_search[i]
+    print("I URLS TO SEARCH: ", i_urls_to_search)
     # relevance_calculator = dill.loads(pickled_relevance_calculator)
     
     # i_urls_to_search = all_urls_to_search[i]
@@ -169,13 +174,17 @@ def top_results(i, bottom_session, hashmap_description_relevance, relevance_calc
         skill_interest = i_urls_to_search["skill_interest"]
     if "in_person_online" in i_urls_to_search:
         in_person_online = i_urls_to_search["in_person_online"]
+    if "location" in i_urls_to_search:
+        location = i_urls_to_search["location"]
+        print("HAGOBA")
     urls_to_search = i_urls_to_search["urls_to_search"]
     
     # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-    if (in_person_online != "all"):
+    if (in_person_online == "online"):
         tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
     else:
-        tags_to_compare_to = [skill_interest, type_of_opportunity]
+        tags_to_compare_to = [skill_interest, type_of_opportunity, location]
+        
     relevance_ratings_dict = {}
     tags_frequency_dict = {}
     all_description_dict = {}
@@ -272,6 +281,8 @@ def top_results(i, bottom_session, hashmap_description_relevance, relevance_calc
         url_dict["skill_interest"] = skill_interest
         url_dict["type_of_opportunity"] = type_of_opportunity
         url_dict["in_person_online"] = in_person_online
+        if ("location" in url_dict.keys()):
+            url_dict["location"] = location
     url_dict["resource_data_dict"] = resource_data_dict
     
     print("url_dict: ", url_dict)
@@ -322,6 +333,66 @@ def master_results(all_urls_to_search, dom_queue):
 
 # ! python web_scraper_multiprocess_copy.py
 
+# tags, description, relevant_words_dict
+def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just return normally no need to make this a separate process
+    # ! NEED TO ADD BACK HASHMAP IF NOT FAST ENOUGH!!!
+    import relevance_analyzer_v2
+    
+    top_queue = multiprocessing.Queue()
+    relevance_processes = []
+    
+    top_session = requests.Session()
+    
+    for group_of_urls_to_search in all_urls_to_search:
+        url_dict = {}
+        
+        if "type_of_opportunity" in group_of_urls_to_search:
+            type_of_opportunity = group_of_urls_to_search["type_of_opportunity"]
+            url_dict["type_of_opportunity"] = type_of_opportunity
+        if "skill_interest" in group_of_urls_to_search:
+            skill_interest = group_of_urls_to_search["skill_interest"]
+            url_dict["skill_interest"] = skill_interest
+        if "in_person_online" in group_of_urls_to_search:
+            in_person_online = group_of_urls_to_search["in_person_online"]
+            url_dict["in_person_online"] = in_person_online
+        if "location" in group_of_urls_to_search:
+            location = group_of_urls_to_search["location"]
+            url_dict["location"] = location
+            print("HAGOBA")
+        urls_to_search = group_of_urls_to_search["urls_to_search"]
+        
+        # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+        if (in_person_online == "online"):
+            tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+        else:
+            tags_to_compare_to = [skill_interest, type_of_opportunity, location]
+        
+        tags_to_compare_relevant_words_dict = {}
+        for tag in tags_to_compare_to:
+            tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
+            sub_tags = tag.split()
+            if (len(sub_tags) > 1):
+                for sub_tag in sub_tags:
+                    tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
+        
+        for url in urls_to_search:
+            description = str(overview_finder(top_session, url))
+            relevance_process = multiprocessing.Process(target=relevance_analyzer_v2.result_relevance_calculator, args=(tags_to_compare_to, description, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+            relevance_processes.append(relevance_process)
+    
+    for relevance_process in relevance_processes:
+        relevance_process.start()
+    while top_queue.qsize() < len(urls_to_search):
+        pass
+    url_dicts_array = []
+    while not top_queue.empty():
+        url_dict = top_queue.get()
+        url_dicts_array.append(url_dict)
+
+    # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
+        # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
+    # ! RETURN FORMATTED RESULTS
+
 # @profile
 def master_scraper(tags, master_queue):
     # if __name__ == '__main__':
@@ -333,7 +404,33 @@ def master_scraper(tags, master_queue):
         
         print("tags: ", tags)
         
-        search_queries_process = multiprocessing.Process(target=master_query_maker, args=(tags, dom_queue))
+        # tags:  {'skills': ['computer science', 'cs', 'math'], 'interests': ['machine learning', 'probability'], 'type_of_opportunity': ['courses'], 'in_person_online': 'all', 'location': 'Rockville MD USA'}
+        tags_array = []
+        for category, category_tags in tags.items():
+            if ((category == "in_person_online") and (category_tags != "online")):
+                pass
+            else:
+                if (type(category_tags) == list):
+                    tags_array += category_tags
+                elif (type(category_tags) == str):
+                    tags_array.append(category_tags)
+        print("tags_array: ", tags_array)
+        
+        
+        relevant_words_process = multiprocessing.Process(target=relevant_words_dict_generator, args=(tags_array, dom_queue))
+        relevant_words_process.start()
+        while dom_queue.qsize() == 0:
+            pass
+        # if (dom_queue.qsize() != 0):
+        #     print("YEETUS")
+        # relevant_words_process.join()
+        # print("YEETUS FETUS")
+        relevant_words_dict = dom_queue.get()
+        relevant_words_process.terminate()
+        if (len(relevant_words_dict) > 0):
+            print("RELEVANT WORDS DICT NOT EMPTY")
+        
+        search_queries_process = multiprocessing.Process(target=master_query_maker, args=(tags, relevant_words_dict, dom_queue))
         # search_queries_process = multiprocessing.Process(target=resource_finder.database_lister_query_maker, args=(tags, dom_queue))
         search_queries_process.start()
         search_queries_process.join()
@@ -365,21 +462,27 @@ def master_scraper(tags, master_queue):
         print("all_urls_to_search: ", all_urls_to_search)
         print("DOM_QUEUE SIZE = ", dom_queue.qsize())
         
+        
+        
         relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
         relevance_optimization_process.start()
+        
+        
         print("ZEBOOBOO")
         # relevance_optimization_process.join()
-        while True:
-            # dom_results = dom_queue.get()
-            # # if dom_results != None:
-            #     break
-            if (dom_queue.qsize() != 0):
-                dom_results = dom_queue.get()
-                print("BREAKING NOW")
-                break
+        # while True:
+        #     # dom_results = dom_queue.get()
+        #     # # if dom_results != None:
+        #     #     break
+        #     if (dom_queue.qsize() != 0):
+        #         dom_results = dom_queue.get()
+        #         print("BREAKING NOW")
+        #         break
+        while dom_queue.qsize() == 0:
+            pass
         
         print("DOM_QUEUE SIZE AFTER FINISHING MASTER_RESULTS = ", dom_queue.qsize())
-        # dom_results = dom_queue.get()
+        dom_results = dom_queue.get()
         # dom_results = dill.loads(dom_results)
         print("GEEBOOBOO")
         relevance_optimization_process.terminate()

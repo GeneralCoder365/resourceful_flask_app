@@ -15,7 +15,7 @@ next(wordnet.words()) # ! Helps prevent AttributeError: 'WordNetCorpusReader' ob
 # from numba import jit # using Numba to speed up cosine similarity calculation
 # nlp = spacy.load('en_core_web_lg')
 
-from memory_profiler import profile
+# from memory_profiler import profile
 
 # ! <= LEVENSHTEIN DISTANCE SET GENERATION
 # http://norvig.com/spell-correct.html
@@ -114,7 +114,7 @@ def dom_relevant_words_generator(tag):
     
     return dom_words_set
 
-def master_relevant_words_generator(tags):
+def master_relevant_words_generator(tags, dom_queue):
     relevant_words_dict = {}
     
     for tag in tags:
@@ -130,13 +130,19 @@ def master_relevant_words_generator(tags):
                     if (sub_tag not in relevant_words_dict):
                         sub_tag_set = dom_relevant_words_generator(sub_tag)
                         relevant_words_dict[sub_tag] = sub_tag_set
+                        print("SUB TAG ADDED")
             else:
                 tag_set = dom_relevant_words_generator(tag)
                 relevant_words_dict[tag] = tag_set
+        print("TAG ADDED")
+    if (len(relevant_words_dict) >= len(tags)):
+        print("RELEVANT WORDS GENERATION SHOULD BE DONE")
     
-    return relevant_words_dict
+    dom_queue.put(relevant_words_dict)
+    print("RELEVANT WORDS PUT")
             
 # print(master_relevant_words_generator(['dog cat', 'dog cat', 'dog cat']))
+# print(master_relevant_words_generator(['math']))
 
 # if __name__ == '__main__':
 #     import time

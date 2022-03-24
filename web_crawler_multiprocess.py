@@ -678,6 +678,7 @@ def databases_to_search_analyzer(search_dict, sub_queue):
     if "location" in search_dict:
         location = search_dict["location"]
         google_search_query += location + " "
+        urls_to_search_dict["location"] = location
     if "sport" in search_dict:
         sport = search_dict["sport"]
         google_search_query += sport + " "

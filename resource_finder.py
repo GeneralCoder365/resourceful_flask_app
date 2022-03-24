@@ -1,7 +1,7 @@
 import re
 from itertools import combinations
 
-import relevance_analyzer
+# import relevance_analyzer
 
 def tag_cleaner(tag):
     tag = str(tag).lower()
@@ -10,23 +10,25 @@ def tag_cleaner(tag):
     return tag
 # print(tag_cleaner("in-person")) # this works, so still outputs in-person
 
-def tags_cleaner(tags_array):
+def tags_cleaner(tags_array, relevant_words_dict):
     # tags_array is a list of tags.
     # This function cleans the tags and returns a list of cleaned tags.
     
     cleaned_text_tags = [tag_cleaner(tag) for tag in tags_array]
-    
+    # ! REMOVE USE OF RELEVANCE ANALYZER AND JUST CHECK AGAINST RELEVANT WORDS DICT FOR DUPLICATES
     for a, b in combinations(cleaned_text_tags, 2):
         if (a == b):
             cleaned_text_tags.remove(a)
-        elif (relevance_analyzer.relevance_calculator(a,b) > 0.7):
+        elif ((a in relevant_words_dict[b]) or (b in relevant_words_dict[a])):
             cleaned_text_tags.remove(a)
+        # elif (relevance_analyzer.relevance_calculator(a,b) > 0.7):
+        #     cleaned_text_tags.remove(a)
     
     return cleaned_text_tags
 
 # ! CONVERT NICO'S DICT STRINGS TO DICT USING JSON.LOAD
 
-def query_maker(tags, dom_queue):
+def query_maker(tags, relevant_words_dict, dom_queue):
     print("TAGS: ", tags)
     # if __name__ == '__main__':
     
@@ -36,15 +38,15 @@ def query_maker(tags, dom_queue):
     search_queries = []
     skills_interests_exists = []
     if "skills" in tags:
-        skills = tags_cleaner(tags["skills"])
+        skills = tags_cleaner(tags["skills"], relevant_words_dict)
         # print("skills: ", skills)
         skills_interests_exists.append("skills")
     if "interests" in tags:
-        interests = tags_cleaner(tags["interests"])
+        interests = tags_cleaner(tags["interests"], relevant_words_dict)
         # print("interests: ", interests)
         skills_interests_exists.append("interests")
     if "languages" in tags:
-        languages = tags_cleaner(tags["languages"])
+        languages = tags_cleaner(tags["languages"], relevant_words_dict)
         if (len(languages) > 0):
             languages_query = ' '.join(languages[:3]) # ! This is a hack to make sure the query is not too long, so only gets first <= 3 languages
     if "type_of_opportunity" in tags:
@@ -63,7 +65,7 @@ def query_maker(tags, dom_queue):
     skills_interests_query = ""
     if (("skills" in skills_interests_exists) and ("interests" in skills_interests_exists)):
         skills_interests_list = skills + interests
-        skills_interests_list = tags_cleaner(skills_interests_list[:6])
+        skills_interests_list = tags_cleaner(skills_interests_list[:6], relevant_words_dict)
         skills_interests_query = ' '.join(skills_interests_list)
     elif ("skills" in skills_interests_exists):
         skills_interests_list = skills[:5]
