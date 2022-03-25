@@ -72,42 +72,55 @@ def master_cosine_similarity(tags, sentence_2):
     embeddings = [nlp(sentence).vector for sentence in [tag_sentence, sentence_2]]
     return cosine_similarity(embeddings[0], embeddings[1]) # max = 1, min = 0
 
-def result_relevance_calculator(tags, description, tags_to_compare_relevant_words_dict, url_dict, top_queue):
-    txt_description = description
-    description = text_cleaner(description)
+def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_dict, top_queue):
+    txt_description = url_dict["description"]
+    description = url_dict["description"]
+    if ("aau" in url_dict["url"].lower()):
+	url_dict["composite_relevance_score"] = 100000
+	url_dict["tags_frequency"] = {}
+	
+	top_queue.put(url_dict)
+	
+    elif (description == "False"):
+	url_dict["composite_relevance_score"] = 0
+	url_dict["tags_frequency"] = {}
+	
+	top_queue.put(url_dict)
+    else:
+	description = text_cleaner(description)
     
-    tags = [tag.lower().strip() for tag in tags]
-    
-    # tags_to_compare_relevant_words_dict = {}
-    # for tag in tags:
-    #     tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
-    #     sub_tags = tag.split()
-    #     if (len(sub_tags) > 1):
-    #         for sub_tag in sub_tags:
-    #             tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
-    
-    
-    # print(tags)
-    # print(description)
-    
-    relevant_words_data = relevant_words_checker(tags_to_compare_relevant_words_dict, description)
-    relevant_words_score = relevant_words_data[0]
-    tags_frequency = relevant_words_data[1]
-    
-    cosine_similarity_score = master_cosine_similarity(tags, txt_description)
-    # print("Cosine similarity score: ", cosine_similarity_score)
-    
-    composite_relevance_score = round((cosine_similarity_score*(relevant_words_score/len(description))), 2)
-    
-    url_dict["composite_relevance_score"] = composite_relevance_score
-    url_dict["tags_frequency"] = tags_frequency
-    
-    # relevance_rating_data = relevance_rater(tags, description) # returns relevance rating and dictionary of prominent tags as keys and frequency as values
-    # return OF THE FORM: [description_fuzzy_hmni_synonym_rating, tags_frequency_dict]
-    
-    # return [composite_relevance_score, tags_frequency]
-    # top_queue.put([composite_relevance_score, tags_frequency])
-    top_queue.put(url_dict)
+	tags = [tag.lower().strip() for tag in tags]
+
+	# tags_to_compare_relevant_words_dict = {}
+	# for tag in tags:
+	#     tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
+	#     sub_tags = tag.split()
+	#     if (len(sub_tags) > 1):
+	#         for sub_tag in sub_tags:
+	#             tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
+
+
+	# print(tags)
+	# print(description)
+
+	relevant_words_data = relevant_words_checker(tags_to_compare_relevant_words_dict, description)
+	relevant_words_score = relevant_words_data[0]
+	tags_frequency = relevant_words_data[1]
+
+	cosine_similarity_score = master_cosine_similarity(tags, txt_description)
+	# print("Cosine similarity score: ", cosine_similarity_score)
+
+	composite_relevance_score = round((cosine_similarity_score*(relevant_words_score/len(description))), 2)
+
+	url_dict["composite_relevance_score"] = composite_relevance_score
+	url_dict["tags_frequency"] = tags_frequency
+
+	# relevance_rating_data = relevance_rater(tags, description) # returns relevance rating and dictionary of prominent tags as keys and frequency as values
+	# return OF THE FORM: [description_fuzzy_hmni_synonym_rating, tags_frequency_dict]
+
+	# return [composite_relevance_score, tags_frequency]
+	# top_queue.put([composite_relevance_score, tags_frequency])
+	top_queue.put(url_dict)
 
 # if __name__ == '__main__':
 #     import time
