@@ -378,6 +378,7 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
         for url in urls_to_search:
             url_dict["url"] = url
             description = str(overview_finder(top_session, url))
+            url_dict["description"] = description
             relevance_process = multiprocessing.Process(target=relevance_analyzer_v2.result_relevance_calculator, args=(tags_to_compare_to, description, tags_to_compare_relevant_words_dict, url_dict, top_queue))
             relevance_processes.append(relevance_process)
     
