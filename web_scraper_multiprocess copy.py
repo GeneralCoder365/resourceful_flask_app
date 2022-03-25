@@ -376,6 +376,7 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
                     tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
         
         for url in urls_to_search:
+            url_dict["url"] = url
             description = str(overview_finder(top_session, url))
             relevance_process = multiprocessing.Process(target=relevance_analyzer_v2.result_relevance_calculator, args=(tags_to_compare_to, description, tags_to_compare_relevant_words_dict, url_dict, top_queue))
             relevance_processes.append(relevance_process)
@@ -392,6 +393,8 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
     # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
         # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
     # ! RETURN FORMATTED RESULTS
+    url_groups = {}
+    
 
 # @profile
 def master_scraper(tags, master_queue):
