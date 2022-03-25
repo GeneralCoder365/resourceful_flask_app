@@ -138,6 +138,8 @@ def master_relevant_words_generator(tags, dom_queue):
     if (len(relevant_words_dict) >= len(tags)):
         print("RELEVANT WORDS GENERATION SHOULD BE DONE")
     
+    print("RELEVANT WORDS KEYS: ", relevant_words_dict.keys())
+    
     dom_queue.put(relevant_words_dict)
     print("RELEVANT WORDS PUT")
             

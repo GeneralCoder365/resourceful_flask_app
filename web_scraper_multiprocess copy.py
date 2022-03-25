@@ -17,7 +17,8 @@ import cchardet # lxml and cchardet speed up requests data processing
 from bs4 import BeautifulSoup as bs
 import requests
 
-from memory_profiler import profile # used for detailed breakdown of memory usage
+# from memory_profiler import profile # used for detailed breakdown of memory usage
+
 
 # import resource_finder
 # import web_crawler_multiprocess
@@ -331,59 +332,155 @@ def master_results(all_urls_to_search, dom_queue):
     
     # return None
 
-# ! python web_scraper_multiprocess_copy.py
+
+def url_grouper(url_dicts_array):
+    print("URL DICTS ARRAY: ", url_dicts_array)
+    # url_dict = {
+        # "url": url -> str
+        # "type_of_opportunity": type_of_opportunity -> str
+        # "skill_interest": skill_interest -> str
+        # "in_person_online": in_person_online -> str
+        # "location": location # ! OPTIONAL -> str
+        # "composite_relevance_score": composite_relevance_score -> float
+        # "tags_frequency": tags_frequency -> dict
+    # }
+
+    url_groups = {} # dict containing arrays by groups of form
+                                    # {url: [composite_relevance_score, description, tags_frequency]}, ...
+    # FRAME BY: keys: "type_of_opportunity, skill_interest, in_person_online, location"
+    # SAME type_of_opportunity, skill_interest, in_person_online, location
+
+    for url_dict in url_dicts_array:
+        # has_location = False
+        key_to_search = ""
+        if "url" in url_dict.keys():
+            url = url_dict["url"]
+        if "description" in url_dict.keys():
+            description = url_dict["description"]
+
+        if "type_of_opportunity" in url_dict.keys():
+            key_to_search += url_dict["type_of_opportunity"]  + " "
+        if "skill_interest" in url_dict.keys():
+            key_to_search += url_dict["skill_interest"] + " "
+        if "in_person_online" in url_dict.keys():
+            key_to_search += url_dict["in_person_online"] + " "
+        if "location" in url_dict.keys():
+            key_to_search += url_dict["location"] + " "
+            # has_location = True
+
+        if "composite_relevance_score" in url_dict.keys():
+            composite_relevance_score = url_dict["composite_relevance_score"]
+        if "tags_frequency" in url_dict.keys():
+            tags_frequency = url_dict["tags_frequency"]
+
+
+        if key_to_search in url_groups.keys():
+            entry = url_groups[key_to_search]
+            entry.append({
+                url: [composite_relevance_score, description, tags_frequency]
+            })
+            url_groups[key_to_search] = entry
+        else:
+            url_groups[key_to_search] = [{
+                url: [composite_relevance_score, description, tags_frequency]
+            }]
+
+    return url_groups
+
+def results_formatter(url_groups):
+    print("URL GROUPS: ", url_groups)
+    results_dict = {}
+    for url_group_key, url_group in url_groups:
+        sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
+        if (len(sorted_url_group) > 5):
+            top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
+        else:
+            top_five_sorted_url_group = sorted_url_group
+        
+        # removes relevance score since it is no no longer needed
+        for url, url_data in top_five_sorted_url_group.items():
+            data = url_data
+            removed_relevance_score = data.pop(0)
+            top_five_sorted_url_group[url] = data
+
+    results_dict[url_group_key] = top_five_sorted_url_group
+
+    return results_dict
+
 
 # tags, description, relevant_words_dict
 def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just return normally no need to make this a separate process
     # ! NEED TO ADD BACK HASHMAP IF NOT FAST ENOUGH!!!
     import relevance_analyzer_v2
+    relevance_calculator = relevance_analyzer_v2.result_relevance_calculator
     
     top_queue = multiprocessing.Queue()
     relevance_processes = []
     
     top_session = requests.Session()
     
+    # print("RELEVANCE WORDS DICT: ", relevant_words_dict)
+    
     for group_of_urls_to_search in all_urls_to_search:
         url_dict = {}
+        try:
+            if "type_of_opportunity" in group_of_urls_to_search:
+                type_of_opportunity = group_of_urls_to_search["type_of_opportunity"]
+                url_dict["type_of_opportunity"] = type_of_opportunity
+            if "skill_interest" in group_of_urls_to_search:
+                skill_interest = group_of_urls_to_search["skill_interest"]
+                url_dict["skill_interest"] = skill_interest
+            if "in_person_online" in group_of_urls_to_search:
+                in_person_online = group_of_urls_to_search["in_person_online"]
+                url_dict["in_person_online"] = in_person_online
+            if "location" in group_of_urls_to_search:
+                location = group_of_urls_to_search["location"]
+                url_dict["location"] = location
+                print("HAGOBA")
+            urls_to_search = group_of_urls_to_search["urls_to_search"]
+            
+            # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+            if (in_person_online == "online"):
+                tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+            else:
+                tags_to_compare_to = [skill_interest, type_of_opportunity, location]
+            
+            tags_to_compare_relevant_words_dict = {}
+
+            for tag in tags_to_compare_to:
+                tag = tag.lower().strip()
+                if (tag not in relevant_words_dict.keys()):
+                    print("TAG NOT IN RELEVANT WORDS DICT: ", tag)
+                tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
+                sub_tags = tag.split()
+                if (len(sub_tags) > 1):
+                    for sub_tag in sub_tags:
+                        tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
+            
+            for url in urls_to_search:
+                url_dict["url"] = url
+                description = str(overview_finder(top_session, url))
+                url_dict["description"] = description
+                # relevance_process = multiprocessing.Process(target=relevance_analyzer_v2.result_relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+                relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+                relevance_processes.append(relevance_process)
+        except Exception as e:
+            print("Error: " + str(e))
+            print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
+            print("Didn't work :(")
+
+            return False
         
-        if "type_of_opportunity" in group_of_urls_to_search:
-            type_of_opportunity = group_of_urls_to_search["type_of_opportunity"]
-            url_dict["type_of_opportunity"] = type_of_opportunity
-        if "skill_interest" in group_of_urls_to_search:
-            skill_interest = group_of_urls_to_search["skill_interest"]
-            url_dict["skill_interest"] = skill_interest
-        if "in_person_online" in group_of_urls_to_search:
-            in_person_online = group_of_urls_to_search["in_person_online"]
-            url_dict["in_person_online"] = in_person_online
-        if "location" in group_of_urls_to_search:
-            location = group_of_urls_to_search["location"]
-            url_dict["location"] = location
-            print("HAGOBA")
-        urls_to_search = group_of_urls_to_search["urls_to_search"]
-        
-        # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-        if (in_person_online == "online"):
-            tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-        else:
-            tags_to_compare_to = [skill_interest, type_of_opportunity, location]
-        
-        tags_to_compare_relevant_words_dict = {}
-        for tag in tags_to_compare_to:
-            tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
-            sub_tags = tag.split()
-            if (len(sub_tags) > 1):
-                for sub_tag in sub_tags:
-                    tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
-        
-        for url in urls_to_search:
-            url_dict["url"] = url
-            description = str(overview_finder(top_session, url))
-            url_dict["description"] = description
-            relevance_process = multiprocessing.Process(target=relevance_analyzer_v2.result_relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
-            relevance_processes.append(relevance_process)
+    print("RELEVANCE PROCESSES READY FOR EXECUTION")
     
+    relevance_processes_started_counter = 0
     for relevance_process in relevance_processes:
         relevance_process.start()
+        relevance_processes_started_counter += 1
+    
+    if (relevance_processes_started_counter == len(relevance_processes)):
+        print("ALL RELEVANCE PROCESSES STARTED")
+    
     while top_queue.qsize() < len(urls_to_search):
         pass
     url_dicts_array = []
@@ -394,8 +491,12 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
     # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
         # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
     # ! RETURN FORMATTED RESULTS
-    url_groups = {}
     
+    url_groups = url_grouper(url_dicts_array)
+    results_dict = results_formatter(url_groups)
+    
+    
+    return results_dict
 
 # @profile
 def master_scraper(tags, master_queue):
@@ -466,33 +567,24 @@ def master_scraper(tags, master_queue):
         print("all_urls_to_search: ", all_urls_to_search)
         print("DOM_QUEUE SIZE = ", dom_queue.qsize())
         
+        # relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
+        # relevance_optimization_process.start()
+        # print("ZEBOOBOO")
+        # while dom_queue.qsize() == 0:
+        #     pass
+        # print("DOM_QUEUE SIZE AFTER FINISHING MASTER_RESULTS = ", dom_queue.qsize())
+        # dom_results = dom_queue.get()
+        # # dom_results = dill.loads(dom_results)
+        # print("GEEBOOBOO")
+        # relevance_optimization_process.terminate()
+        # print("RELEVANCE OPTIMIZATION PROCESS IS ALIVE: ", relevance_optimization_process.is_alive())
+        # print("DOM_RESULTS: ", dom_results)
+        # print("DOM_QUEUE SIZE = ", dom_queue.qsize())
         
-        
-        relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
-        relevance_optimization_process.start()
-        
-        
-        print("ZEBOOBOO")
-        # relevance_optimization_process.join()
-        # while True:
-        #     # dom_results = dom_queue.get()
-        #     # # if dom_results != None:
-        #     #     break
-        #     if (dom_queue.qsize() != 0):
-        #         dom_results = dom_queue.get()
-        #         print("BREAKING NOW")
-        #         break
-        while dom_queue.qsize() == 0:
-            pass
-        
-        print("DOM_QUEUE SIZE AFTER FINISHING MASTER_RESULTS = ", dom_queue.qsize())
-        dom_results = dom_queue.get()
-        # dom_results = dill.loads(dom_results)
-        print("GEEBOOBOO")
-        relevance_optimization_process.terminate()
-        print("RELEVANCE OPTIMIZATION PROCESS IS ALIVE: ", relevance_optimization_process.is_alive())
-        print("DOM_RESULTS: ", dom_results)
-        print("DOM_QUEUE SIZE = ", dom_queue.qsize())
+        print("STARTING RELEVANCE OPTIMIZATION PROCESS")
+        dom_results = master_relevance_analyzer(all_urls_to_search, relevant_words_dict)
+        print("FINISHED RELEVANCE OPTIMIZATION PROCESS")
+        print("RESULTS DICT: ", dom_results)
         
         dom_queue.close()
         
