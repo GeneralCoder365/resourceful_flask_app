@@ -32,7 +32,9 @@ def text_cleaner(description):
 
 # ! RELEVANT WORDS SCORER
 def relevant_words_checker(tags_to_compare_relevant_words_dict, description_array):
+    # print("LENGTH: ", len(tags_to_compare_relevant_words_dict))
     # check if each description word exists in the relevant_words_dict
+    
     tags_frequency = {}
     relevant_words_score = 0
 
@@ -49,7 +51,7 @@ def relevant_words_checker(tags_to_compare_relevant_words_dict, description_arra
                 else:
                     tags_frequency[tag] = 1
     
-    relevant_words_score = round((relevant_words_score/len(tags_to_compare_relevant_words_dict)), 2) # ! MIGHT NEED TO CHANGE!!!
+    # relevant_words_score = round((relevant_words_score/len(tags_to_compare_relevant_words_dict)), 2) # ! MIGHT NEED TO CHANGE!!!
    
     
     return [relevant_words_score, tags_frequency]
@@ -72,7 +74,8 @@ def master_cosine_similarity(tags, sentence_2):
     embeddings = [nlp(sentence).vector for sentence in [tag_sentence, sentence_2]]
     return cosine_similarity(embeddings[0], embeddings[1]) # max = 1, min = 0
 
-def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_dict, top_queue):
+# def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_dict, top_queue):
+def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_dict):
     print("RESULT RELEVANCE CALCULATOR STARTING")
     txt_description = url_dict["description"]
     description = url_dict["description"]
@@ -82,14 +85,16 @@ def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_d
         url_dict["composite_relevance_score"] = 100000
         url_dict["tags_frequency"] = {}
 	
-        top_queue.put(url_dict)
+        # top_queue.put(url_dict)
+        # return url_dict
 	
     # ! NO DESCRIPTION CASE
     elif (description == "False"):
         url_dict["composite_relevance_score"] = 0
         url_dict["tags_frequency"] = {}
 
-        top_queue.put(url_dict)
+        # top_queue.put(url_dict)
+        # return url_dict
         
     else:
         description = text_cleaner(description)
@@ -125,8 +130,11 @@ def result_relevance_calculator(tags, tags_to_compare_relevant_words_dict, url_d
 
         # return [composite_relevance_score, tags_frequency]
         # top_queue.put([composite_relevance_score, tags_frequency])
-        top_queue.put(url_dict)
+        # top_queue.put(url_dict)
+    
+    # top_queue.put(url_dict)
     print("RESULT RELEVANCE CALCULATOR FINISHING")
+    return url_dict
 
 # if __name__ == '__main__':
 #     import time

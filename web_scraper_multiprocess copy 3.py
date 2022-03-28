@@ -6,6 +6,7 @@ import json
 import multiprocessing
 # from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
+from click import group
 # import threading
 # from pathos.multiprocessing import ProcessingPool as Pool
 # import dill
@@ -163,175 +164,6 @@ def description_relevance_calculator(hashmap_description_relevance, relevance_ca
         return (url, False)
         # else:
 
-def top_results(i, bottom_session, hashmap_description_relevance, relevance_calculator, all_urls_to_search):
-    i_urls_to_search = all_urls_to_search[i]
-    print("I URLS TO SEARCH: ", i_urls_to_search)
-    # relevance_calculator = dill.loads(pickled_relevance_calculator)
-    
-    # i_urls_to_search = all_urls_to_search[i]
-    if "type_of_opportunity" in i_urls_to_search:
-        type_of_opportunity = i_urls_to_search["type_of_opportunity"]
-    if "skill_interest" in i_urls_to_search:
-        skill_interest = i_urls_to_search["skill_interest"]
-    if "in_person_online" in i_urls_to_search:
-        in_person_online = i_urls_to_search["in_person_online"]
-    if "location" in i_urls_to_search:
-        location = i_urls_to_search["location"]
-        print("HAGOBA")
-    urls_to_search = i_urls_to_search["urls_to_search"]
-    
-    # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-    if (in_person_online == "online"):
-        tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-    else:
-        tags_to_compare_to = [skill_interest, type_of_opportunity, location]
-        
-    relevance_ratings_dict = {}
-    tags_frequency_dict = {}
-    all_description_dict = {}
-    
-    # top_threads = []
-    
-    # for j in range(len(urls_to_search)):
-    #     description_relevance_thread = threading.Thread(target=description_relevance_calculator, args=(relevance_analyzer.result_relevance_calculator, tags_to_compare_to, urls_to_search[j], top_queue))
-    #     top_threads.append(description_relevance_thread)
-    dom_time = time.time()
-    with ThreadPool() as bottom_pool: # not specifying Pool(processes=__) so using max number of cores on computer
-        # bottom_pool = bottom_pool.starmap_async(description_relevance_calculator, [(relevance_analyzer.result_relevance_calculator, tags_to_compare_to, urls_to_search[j]) for j in range(len(urls_to_search))]).get()
-        bottom_pool_starmap = bottom_pool.starmap_async(description_relevance_calculator, [(hashmap_description_relevance, relevance_calculator, bottom_session, tags_to_compare_to, urls_to_search[j]) for j in range(len(urls_to_search))]).get()
-        # ! hashmap_description_relevance may have memory sharing error
-        # ! line 200, in master_results
-        # ! IndexError: list index out of range
-        # top_results = bottom_pool.get()
-        bottom_pool.terminate()
-    # print("POOL ", i, " RESULTS: ", bottom_pool)
-    print("POOL ", i, " RESULTS: ", bottom_pool_starmap)
-    # # print("TOP_THREADS: ", top_threads)
-    print("Pool process finished --- %s seconds ---" % (time.time() - dom_time))
-    # for t_thread in top_threads:
-    #     t_thread.start()
-    # print("FINISHED STARTING TOP_THREADS")
-    # for t_thread in top_threads:
-    #     print("FINISHING TOP_THREAD")
-    #     t_thread.join()
-    #     print("FINISHED TOP_THREAD")
-    
-    # if (len(urls_to_search) == top_queue.qsize()):
-    #     print("GOOODDDDD!!!")
-    
-    # for k in range(top_queue.qsize()):
-    #     description_relevance_data = top_queue.get()
-        # (url, description, relevance, tags_frequency)
-    
-    top_hashmap_description_relevance = {}
-    
-    print("BOTTOM POOL STARMAP: ", bottom_pool_starmap)
-    
-    for description_relevance_data in bottom_pool_starmap:
-        print("DESCRIPTION RELEVANCE DATA: ", description_relevance_data)
-        try:
-            if (description_relevance_data[1] == None):
-                print("WEIRD SHIT IS HAPPENING!!!")
-                print("WEIRD SHIT URL IS: ", description_relevance_data[0])
-                print("WEIRD SHIT LENGTH IS: ", len(description_relevance_data))
-            if (description_relevance_data[1] != False): # (url, False)
-                url = description_relevance_data[0]
-                description = description_relevance_data[1]
-                relevance = description_relevance_data[2]
-                tags_frequency = description_relevance_data[3]
-                
-                all_description_dict[url] = description
-                tags_frequency_dict[url] = tags_frequency
-                relevance_ratings_dict[url] = relevance
-                
-                top_hashmap_description_relevance[url] = [description, relevance, tags_frequency] # hdr[url] = [description, relevance, tags_frequency]  # (url, description, relevance, tags_frequency)
-            else:
-                url = description_relevance_data[0]
-                # top_hashmap_description_relevance[url] = [False] # hdr[url] = [False]
-                top_hashmap_description_relevance[url] = False
-        except TypeError:
-            print("WEIRD FUCKSHIT HAPPENED DESCRIPTION RELEVANCE DATA IS NONETYPE FOR SOME REASON")
-    
-    print("TOP_HASHMAP_DESCRIPTION_RELEVANCE: ", top_hashmap_description_relevance)
-    # need to call .close() before using .join()
-    # bottom_pool.close()
-    # bottom_pool.join()
-
-    # sorts in descending order
-    relevance_ratings_dict = dict(sorted(relevance_ratings_dict.items(), key=lambda x:x[1], reverse=True))
-    print("RELEVANCE_RATINGS_DICT: ", relevance_ratings_dict)
-    
-    # print("sorted relevance_ratings_dict: ", relevance_ratings_dict)
-    
-    relevance_ratings_dict = dict(list(relevance_ratings_dict.items())[0: 5])
-    
-    print("processed relevance_ratings_dict: ", relevance_ratings_dict)
-    
-    resource_data_dict = {}
-    for a in relevance_ratings_dict.keys():
-        description =  re.sub(r'[^a-zA-Z0-9.!? ]', '', all_description_dict[a])
-        resource_data_dict[a] = [description, tags_frequency_dict[a]]
-    print("resource_data_dict: ", resource_data_dict)
-    # hashmap_description_relevance.update(resource_data_dict) # !!!!
-    
-    url_dict = {}
-    if (type_of_opportunity == "sports"):
-        url_dict["sport"] = i_urls_to_search["sport"]
-        url_dict["type_of_opportunity"] = i_urls_to_search["type_of_opportunity"]
-    else:
-        url_dict["skill_interest"] = skill_interest
-        url_dict["type_of_opportunity"] = type_of_opportunity
-        url_dict["in_person_online"] = in_person_online
-        if ("location" in url_dict.keys()):
-            url_dict["location"] = location
-    url_dict["resource_data_dict"] = resource_data_dict
-    
-    print("url_dict: ", url_dict)
-    
-    hashmap_description_relevance.update(top_hashmap_description_relevance)
-    
-    # top_queue.put(url_dict)
-    return url_dict
-
-
-# global master_results
-# @profile
-def master_results(all_urls_to_search, dom_queue):
-    import relevance_analyzer_multiprocess
-    
-    # top_queue = multiprocessing.Queue()
-    
-    
-    # https://towardsdatascience.com/parallelism-with-python-part-1-196f0458ca14
-    search_results = {}
-    
-    print("NUMBER OF POOLS TO CREATE: ", len(all_urls_to_search))
-    
-    bottom_session = requests.Session()
-    
-    top_manager = multiprocessing.Manager()
-    hashmap_description_relevance = top_manager.dict()
-    
-    with ThreadPool() as top_pool:
-        # top_pool_starmap = top_pool.starmap_async(top_results, [(i, bottom_session, hashmap_description_relevance, relevance_analyzer.relevance_calculator) for i in range(len(all_urls_to_search))]).get()
-        top_pool_starmap = top_pool.starmap_async(top_results, [(i, bottom_session, hashmap_description_relevance, relevance_analyzer_multiprocess.result_relevance_calculator, all_urls_to_search) for i in range(len(all_urls_to_search))]).get()
-
-        top_pool.terminate()
-    
-    for i in range(len(top_pool_starmap)):
-        search_results[i] = top_pool_starmap[i]
-    
-    search_results = json.dumps(search_results)
-    print("SEARCH RESULTS: ", search_results)
-    # pickled_search_results = dill.dumps(search_results)
-    # print("PICKLED SEARCH RESULTS: ", pickled_search_results)
-    print("PRE DOM QUEUE SIZE: ", dom_queue.qsize())
-    dom_queue.put(search_results)
-    print("POST DOM QUEUE SIZE: ", dom_queue.qsize())
-    print("MASTER RESULTS DONE")
-    
-    # return None
-
 
 def url_grouper(url_dicts_array):
     print("URL DICTS ARRAY: ", url_dicts_array)
@@ -373,6 +205,7 @@ def url_grouper(url_dicts_array):
         if "tags_frequency" in url_dict.keys():
             tags_frequency = url_dict["tags_frequency"]
 
+        key_to_search = key_to_search.strip()
 
         if key_to_search in url_groups.keys():
             entry = url_groups[key_to_search]
@@ -385,123 +218,181 @@ def url_grouper(url_dicts_array):
                 url: [composite_relevance_score, description, tags_frequency]
             }]
 
+    internal_size = 0
+    for key, value in url_groups.items():
+        internal_size += len(value)
+    print("INTERNAL SIZE: ", internal_size)
+    print("GROUPS COUNT: ", len(url_groups))
+    
     return url_groups
 
 def results_formatter(url_groups):
     print("URL GROUPS: ", url_groups)
     results_dict = {}
-    for url_group_key, url_group in url_groups:
-        sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
-        if (len(sorted_url_group) > 5):
-            top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
-        else:
-            top_five_sorted_url_group = sorted_url_group
+    try:
+        for url_group_key, url_group in url_groups:
+            sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
+            if (len(sorted_url_group) > 5):
+                top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
+            else:
+                top_five_sorted_url_group = sorted_url_group
+            
+            # removes relevance score since it is no no longer needed
+            for url, url_data in top_five_sorted_url_group.items():
+                data = url_data
+                removed_relevance_score = data.pop(0)
+                top_five_sorted_url_group[url] = data
+
+        results_dict[url_group_key] = top_five_sorted_url_group
+
+        return results_dict
+    except Exception as e:
+        print("Error: " + str(e))
+        print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
+        print("Didn't work :(")
+
+        return False
+
+
+def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relevant_words_dict):
+    relevance_thread_parameters = []
+    
+    base_url_dict = {}
+    try:
+        if "type_of_opportunity" in group_of_urls_to_search:
+            type_of_opportunity = group_of_urls_to_search["type_of_opportunity"]
+            base_url_dict["type_of_opportunity"] = type_of_opportunity
+        if "skill_interest" in group_of_urls_to_search:
+            skill_interest = group_of_urls_to_search["skill_interest"]
+            base_url_dict["skill_interest"] = skill_interest
+        if "in_person_online" in group_of_urls_to_search:
+            in_person_online = group_of_urls_to_search["in_person_online"]
+            base_url_dict["in_person_online"] = in_person_online
+        if "location" in group_of_urls_to_search:
+            location = group_of_urls_to_search["location"]
+            base_url_dict["location"] = location
+            print("HAGOBA")
+        urls_to_search = group_of_urls_to_search["urls_to_search"]
         
-        # removes relevance score since it is no no longer needed
-        for url, url_data in top_five_sorted_url_group.items():
-            data = url_data
-            removed_relevance_score = data.pop(0)
-            top_five_sorted_url_group[url] = data
+        # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+        if (in_person_online == "online"):
+            tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+        else:
+            tags_to_compare_to = [skill_interest, type_of_opportunity, location]
+        
+        tags_to_compare_relevant_words_dict = {}
 
-    results_dict[url_group_key] = top_five_sorted_url_group
+        for tag in tags_to_compare_to:
+            tag = tag.lower().strip()
+            if (tag not in relevant_words_dict.keys()):
+                print("TAG NOT IN RELEVANT WORDS DICT: ", tag)
+            tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
+            sub_tags = tag.split()
+            if (len(sub_tags) > 1):
+                for sub_tag in sub_tags:
+                    tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
+        
+        if (len(urls_to_search) == 0):
+            print("WEIRD SHIT IS HAPPENING")
+        
+        for url in urls_to_search:
+            url_dict = base_url_dict.copy()
+            url_dict["url"] = url
+            description = str(overview_finder(top_session, url))
+            url_dict["description"] = description
+            # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+            relevance_thread_parameter = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
+            # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
+            # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
+            relevance_thread_parameters.append(relevance_thread_parameter)
+        
+        
+        return relevance_thread_parameters
+    except Exception as e:
+        print("Error: " + str(e))
+        print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
+        print("Didn't work :(")
 
-    return results_dict
-
+        return False
 
 # tags, description, relevant_words_dict
 def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just return normally no need to make this a separate process
     # ! NEED TO ADD BACK HASHMAP IF NOT FAST ENOUGH!!!
-    import relevance_analyzer_v2
-    relevance_calculator = relevance_analyzer_v2.result_relevance_calculator
+    pre_top_time = time.time()
     
-    top_queue = multiprocessing.Queue()
-    relevance_processes = []
+    # top_queue = multiprocessing.Queue()
+    # relevance_processes = []
+    relevance_threads_parameters = []
     
     top_session = requests.Session()
     
     # print("RELEVANCE WORDS DICT: ", relevant_words_dict)
+    with ThreadPool() as group_of_urls_to_search_pool:
+        group_of_urls_to_search_results = group_of_urls_to_search_pool.starmap_async(group_of_urls_to_search_sub_func, [(group_of_urls_to_search, top_session, relevant_words_dict) for group_of_urls_to_search in all_urls_to_search]).get()
+        group_of_urls_to_search_pool.terminate()
     
-    for group_of_urls_to_search in all_urls_to_search:
-        url_dict = {}
-        try:
-            if "type_of_opportunity" in group_of_urls_to_search:
-                type_of_opportunity = group_of_urls_to_search["type_of_opportunity"]
-                url_dict["type_of_opportunity"] = type_of_opportunity
-            if "skill_interest" in group_of_urls_to_search:
-                skill_interest = group_of_urls_to_search["skill_interest"]
-                url_dict["skill_interest"] = skill_interest
-            if "in_person_online" in group_of_urls_to_search:
-                in_person_online = group_of_urls_to_search["in_person_online"]
-                url_dict["in_person_online"] = in_person_online
-            if "location" in group_of_urls_to_search:
-                location = group_of_urls_to_search["location"]
-                url_dict["location"] = location
-                print("HAGOBA")
-            urls_to_search = group_of_urls_to_search["urls_to_search"]
-            
-            # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-            if (in_person_online == "online"):
-                tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
-            else:
-                tags_to_compare_to = [skill_interest, type_of_opportunity, location]
-            
-            tags_to_compare_relevant_words_dict = {}
-
-            for tag in tags_to_compare_to:
-                tag = tag.lower().strip()
-                if (tag not in relevant_words_dict.keys()):
-                    print("TAG NOT IN RELEVANT WORDS DICT: ", tag)
-                tags_to_compare_relevant_words_dict[tag] = relevant_words_dict[tag]
-                sub_tags = tag.split()
-                if (len(sub_tags) > 1):
-                    for sub_tag in sub_tags:
-                        tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
-            
-            for url in urls_to_search:
-                url_dict["url"] = url
-                description = str(overview_finder(top_session, url))
-                url_dict["description"] = description
-                relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
-                relevance_processes.append(relevance_process)
-        except Exception as e:
-            print("Error: " + str(e))
-            print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
-            print("Didn't work :(")
-
-            return False
+    for relevance_thread_parameters in group_of_urls_to_search_results:
+        relevance_threads_parameters += relevance_thread_parameters
         
     print("RELEVANCE PROCESSES READY FOR EXECUTION")
+    print("PRE TOP STUFF finished --- %s seconds ---" % (time.time() - pre_top_time))
+    # ! PRE TOP STUFF finished --- 11.370482921600342 seconds ---
+    print("RELEVANCE PARAMETERS LENGTH: ", len(relevance_threads_parameters))
+    needs_to_be_length = 0
+    for i in all_urls_to_search:
+        # print(len(i["urls_to_search"]))
+        needs_to_be_length += len(i["urls_to_search"])
+    print("NEEDS TO BE: ", needs_to_be_length)
     
-    relevance_processes_started_counter = 0
-    for relevance_process in relevance_processes:
-        relevance_process.start()
-        relevance_processes_started_counter += 1
+    for param in relevance_threads_parameters:
+        if (relevance_threads_parameters.count(param) > 1):
+            print("DUPLICATE PARAMETERS: ", relevance_threads_parameters.index(param), " X ", relevance_threads_parameters.count(param))
     
-    if (relevance_processes_started_counter == len(relevance_processes)):
-        print("ALL RELEVANCE PROCESSES STARTED")
     
-    while top_queue.qsize() < len(urls_to_search):
-        pass
-    url_dicts_array = []
-    while not top_queue.empty():
-        url_dict = top_queue.get()
-        url_dicts_array.append(url_dict)
-
+    spacy_time = time.time()
+    import relevance_analyzer_v2
+    relevance_calculator = relevance_analyzer_v2.result_relevance_calculator
+    print("SPACY IMPORT FINISHED --- %s seconds ---" % (time.time() - spacy_time))
+    # ! SPACY IMPORT FINISHED --- 11.687415361404419 seconds ---
+    
+    
+    top_time = time.time()
+    
+    with ThreadPool() as top_pool:
+        top_pool_starmap = top_pool.starmap_async(relevance_calculator, [param for param in relevance_threads_parameters]).get()
+        top_pool.terminate()
     # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
         # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
     # ! RETURN FORMATTED RESULTS
+    url_dicts_array = top_pool_starmap
     
+    max_score = 0
+    for url_dict in url_dicts_array:
+        if (url_dict["composite_relevance_score"] > max_score):
+            max_score = url_dict["composite_relevance_score"]
+        
+        if (url_dicts_array.count(url_dict) > 1):
+            print("DUPLICATE URL DICTS: ", url_dicts_array.index(url_dict), " X ", url_dicts_array.count(url_dict))
+    print("MAX SCORE: ", max_score) # ! MAX SCORE:  0.21
+    print("TOP POOL RESULTS: ", url_dicts_array)
+    print("Pool process finished --- %s seconds ---" % (time.time() - top_time))
+
+    post_processing_time = time.time()
     url_groups = url_grouper(url_dicts_array)
+    print("URL groups: ", url_groups)
     results_dict = results_formatter(url_groups)
+    print("RESULTS DICT: ", results_dict)
+    print("POST PROCESSING FINISHED --- %s seconds ---" % (time.time() - post_processing_time))
     
     
-    return results_dict
+    # return results_dict
 
 # @profile
 def master_scraper(tags, master_queue):
     # if __name__ == '__main__':
     
     try:
+        dom_time = time.time()
         dom_queue = multiprocessing.Queue()
         
         tags = tags_to_dict(tags)
@@ -564,7 +455,10 @@ def master_scraper(tags, master_queue):
 
 
         print("all_urls_to_search: ", all_urls_to_search)
+        print("GROUPS COUNT NEEDS TO BE: ", len(all_urls_to_search))
         print("DOM_QUEUE SIZE = ", dom_queue.qsize())
+        print("PRE RELEVANCE STUFF finished --- %s seconds ---" % (time.time() - dom_time))
+        # ! PRE RELEVANCE STUFF finished --- 34.89859437942505 seconds ---
         
         # relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
         # relevance_optimization_process.start()

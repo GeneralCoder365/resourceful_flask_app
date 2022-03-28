@@ -411,11 +411,16 @@ def results_formatter(url_groups):
 # tags, description, relevant_words_dict
 def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just return normally no need to make this a separate process
     # ! NEED TO ADD BACK HASHMAP IF NOT FAST ENOUGH!!!
+    pre_top_time = time.time()
+    spacy_time = time.time()
     import relevance_analyzer_v2
     relevance_calculator = relevance_analyzer_v2.result_relevance_calculator
+    print("SPACY IMPORT FINISHED --- %s seconds ---" % (time.time() - spacy_time))
+    # ! SPACY IMPORT FINISHED --- 31.02342939376831 seconds ---
     
-    top_queue = multiprocessing.Queue()
-    relevance_processes = []
+    # top_queue = multiprocessing.Queue()
+    # relevance_processes = []
+    relevance_threads_parameters = []
     
     top_session = requests.Session()
     
@@ -457,12 +462,18 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
                     for sub_tag in sub_tags:
                         tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
             
+            if (len(urls_to_search) == 0):
+                print("WEIRD SHIT IS HAPPENING")
+            
             for url in urls_to_search:
                 url_dict["url"] = url
                 description = str(overview_finder(top_session, url))
                 url_dict["description"] = description
-                relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
-                relevance_processes.append(relevance_process)
+                # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+                relevance_thread_parameters = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
+                # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
+                # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
+                relevance_threads_parameters.append(relevance_thread_parameters)
         except Exception as e:
             print("Error: " + str(e))
             print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
@@ -471,37 +482,36 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
             return False
         
     print("RELEVANCE PROCESSES READY FOR EXECUTION")
+    print("PRE TOP STUFF finished --- %s seconds ---" % (time.time() - pre_top_time))
+    # ! PRE TOP STUFF finished --- 81.4465844631195 seconds ---
+    # ! PARAMETERS PREPARATION TIME: PRE TOP TIME - SPACY IMPORT TIME = 
+    # ! 81.4465844631195 - 31.02342939376831 
+    # ! = 50.421805849609375 seconds
+    print("RELEVANCE PARAMETERS: ", relevance_threads_parameters)
     
-    relevance_processes_started_counter = 0
-    for relevance_process in relevance_processes:
-        relevance_process.start()
-        relevance_processes_started_counter += 1
-    
-    if (relevance_processes_started_counter == len(relevance_processes)):
-        print("ALL RELEVANCE PROCESSES STARTED")
-    
-    while top_queue.qsize() < len(urls_to_search):
-        pass
-    url_dicts_array = []
-    while not top_queue.empty():
-        url_dict = top_queue.get()
-        url_dicts_array.append(url_dict)
+    # top_time = time.time()
+    # with ThreadPool() as top_pool:
+    #     top_pool_starmap = top_pool.starmap_async(relevance_calculator, [param for param in relevance_threads_parameters]).get()
+    #     top_pool.terminate()
+    # # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
+    #     # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
+    # # ! RETURN FORMATTED RESULTS
+    # url_dicts_array = top_pool_starmap
+    # print("TOP POOL RESULTS: ", url_dicts_array)
+    # print("Pool process finished --- %s seconds ---" % (time.time() - top_time))
 
-    # ! WRITE ALGORITHM THAT GROUPS THE RESULTS BY SKILL INTEREST, TYPE OF OPPORTUNITY, IN PERSON ONLINE, LOCATION (IF APPLICABLE)
-        # ! THEN SORTS THE RESULTS WITHIN EACH GROUP BY RELEVANCE
-    # ! RETURN FORMATTED RESULTS
-    
-    url_groups = url_grouper(url_dicts_array)
-    results_dict = results_formatter(url_groups)
+    # url_groups = url_grouper(url_dicts_array)
+    # results_dict = results_formatter(url_groups)
     
     
-    return results_dict
+    # return results_dict
 
 # @profile
 def master_scraper(tags, master_queue):
     # if __name__ == '__main__':
     
     try:
+        dom_time = time.time()
         dom_queue = multiprocessing.Queue()
         
         tags = tags_to_dict(tags)
@@ -565,6 +575,8 @@ def master_scraper(tags, master_queue):
 
         print("all_urls_to_search: ", all_urls_to_search)
         print("DOM_QUEUE SIZE = ", dom_queue.qsize())
+        print("PRE RELEVANCE STUFF finished --- %s seconds ---" % (time.time() - dom_time))
+        # ! PRE RELEVANCE STUFF finished --- 34.89859437942505 seconds ---
         
         # relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
         # relevance_optimization_process.start()
