@@ -127,42 +127,6 @@ def tags_to_dict(str_tags):
     
     return tags
 
-# ! used to solve AttributeError: Can't pickle local object 'master_results.<locals>.description_relevance_calculator'
-# global description_relevance_calculator
-def description_relevance_calculator(hashmap_description_relevance, relevance_calculator, bottom_session, tags_to_compare_to, url):
-    bottom_time = time.time()
-    print("HELLOOOOOO")
-    print("CURRENT TAGS TO COMPARE TO: ", tags_to_compare_to)
-    print("CURRENT URL: ", url)
-    print("HASHMAP CURRENT: ", hashmap_description_relevance)
-    if (url in hashmap_description_relevance.keys()):
-        print("URL FOUND IN HASHMAP")
-        data = hashmap_description_relevance[url]
-        if (data == False):
-            return (url, False)
-        print("Description relevance process finished --- %s seconds ---" % (time.time() - bottom_time))
-        return (url, data[0], data[1], data[2]) # (url, description, relevance, tags_frequency)
-    
-    else:
-        # description = str(overview_finder(url))
-        description = str(overview_finder(bottom_session, url))
-        # print("DESCRIPTION: ", description)
-
-        if (description != "False"): # only include urls that we can pull descriptions from
-            relevance_data = relevance_calculator(tags_to_compare_to, description)
-            relevance = relevance_data[0]
-            tags_frequency = relevance_data[1] # {'exam': 3, 'boobs': 2, 'favourite': 1}
-            # tags_frequency_dict[urls_to_search[j]] = tags_frequency
-            # print("current relevance: ", relevance)
-            if (relevance == False):
-                relevance = 0
-            
-            # print("RELEVANCE: ", relevance)
-            print("Description relevance process finished --- %s seconds ---" % (time.time() - bottom_time))
-            return (url, description, relevance, tags_frequency)
-        print("Description relevance process finished --- %s seconds ---" % (time.time() - bottom_time))
-        return (url, False)
-        # else:
 
 
 def url_grouper(url_dicts_array):
