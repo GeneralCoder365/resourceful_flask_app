@@ -230,7 +230,7 @@ def results_formatter(url_groups):
     print("URL GROUPS: ", url_groups)
     results_dict = {}
     try:
-        for url_group_key, url_group in url_groups:
+        for url_group_key, url_group in url_groups.items():
             sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
             if (len(sorted_url_group) > 5):
                 top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
@@ -243,7 +243,7 @@ def results_formatter(url_groups):
                 removed_relevance_score = data.pop(0)
                 top_five_sorted_url_group[url] = data
 
-        results_dict[url_group_key] = top_five_sorted_url_group
+            results_dict[url_group_key] = top_five_sorted_url_group
 
         return results_dict
     except Exception as e:
