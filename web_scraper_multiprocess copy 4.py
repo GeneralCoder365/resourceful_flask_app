@@ -240,6 +240,19 @@ def results_formatter(url_groups):
         return False
 
 
+def url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict):
+    url_dict = base_url_dict.copy()
+    url_dict["url"] = url
+    description = str(overview_finder(top_session, url))
+    url_dict["description"] = description
+    # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+    relevance_thread_parameter = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
+    # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
+    # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
+    # relevance_thread_parameters.append(relevance_thread_parameter)
+    
+    return relevance_thread_parameter
+
 def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relevant_words_dict):
     relevance_thread_parameters = []
     
@@ -281,17 +294,23 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
         if (len(urls_to_search) == 0):
             print("WEIRD SHIT IS HAPPENING")
         
-        for url in urls_to_search:
-            url_dict = base_url_dict.copy()
-            url_dict["url"] = url
-            description = str(overview_finder(top_session, url))
-            url_dict["description"] = description
-            # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
-            relevance_thread_parameter = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
-            # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
-            # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
-            relevance_thread_parameters.append(relevance_thread_parameter)
+        # for url in urls_to_search:
+        #     url_dict = base_url_dict.copy()
+        #     url_dict["url"] = url
+        #     description = str(overview_finder(top_session, url))
+        #     url_dict["description"] = description
+        #     # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
+        #     relevance_thread_parameter = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
+        #     # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
+        #     # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
+        #     relevance_thread_parameters.append(relevance_thread_parameter)
         
+        # url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict)
+        with ThreadPool() as urls_slave_pool:
+            urls_slave_pool_results = urls_slave_pool.starmap_async(url_to_search_slave_func, [(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict) for url in urls_to_search]).get()
+            urls_slave_pool.terminate()
+        
+        relevance_thread_parameters = urls_slave_pool_results
         
         return relevance_thread_parameters
     except Exception as e:
