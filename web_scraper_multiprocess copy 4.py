@@ -176,14 +176,15 @@ def url_grouper(url_dicts_array):
 
         if key_to_search in url_groups.keys():
             entry = url_groups[key_to_search]
-            entry.append({
-                url: [composite_relevance_score, description, tags_frequency]
-            })
+            entry = entry | {url: [composite_relevance_score, description, tags_frequency]} # joins dicts conveniently
+            # entry.append({
+                # url: [composite_relevance_score, description, tags_frequency]
+            # })
             url_groups[key_to_search] = entry
         else:
-            url_groups[key_to_search] = [{
+            url_groups[key_to_search] = {
                 url: [composite_relevance_score, description, tags_frequency]
-            }]
+            }
 
     internal_size = 0
     for key, value in url_groups.items():
@@ -194,42 +195,42 @@ def url_grouper(url_dicts_array):
     return url_groups
 
 
-def sort_by(val):
-    # gets the relevance score from the value linked to the first key in the dictionary (since the resource dict only has one key [url])
-    # first key in dict: next(iter(val))
-    return val[next(iter(val))][0]
+# def sort_by(val):
+    # # gets the relevance score from the value linked to the first key in the dictionary (since the resource dict only has one key [url])
+    # # first key in dict: next(iter(val))
+    # return val[next(iter(val))][0]
 
 def results_formatter(url_groups):
     print("URL GROUPS: ", url_groups)
     results_dict = {}
     try:
         for url_group_key, url_group in url_groups.items():
-            # url_group: array of dicts with url: [composite_relevance_score, description, tags_frequency]
+            # url_group: dict with {url: [composite_relevance_score, description, tags_frequency], ...}
             
-            # sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
-            # if (len(sorted_url_group) > 5):
-            #     top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
-            # else:
-            #     top_five_sorted_url_group = sorted_url_group
+            sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
+            if (len(sorted_url_group) > 5):
+                top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
+            else:
+                top_five_sorted_url_group = sorted_url_group
             
-            url_group.sort(key=sort_by, reverse=True)
-            url_group = url_group[:5]
+            # url_group.sort(key=sort_by, reverse=True)
+            # url_group = url_group[:5]
             
             # removes relevance score since it is no no longer needed
-            # for url, url_data in url_group.items():
-            #     data = url_data
-            #     removed_relevance_score = data.pop(0)
-            #     url_group[url] = data
+            for url, url_data in top_five_sorted_url_group.items():
+                data = url_data
+                removed_relevance_score = data.pop(0)
+                top_five_sorted_url_group[url] = data
             
-            result_url_group = []
-            for url_dict in url_group:
-                first_key = next(iter(url_dict))
-                new_value = url_dict[first_key][1:] # ! [description, tags_frequency] removed composite_relevance_score
-                # new_value = url_dict[first_key]
-                url_dict[first_key] = new_value
-                result_url_group.append(url_dict)
+            # result_url_group = []
+            # for url_dict in url_group:
+                # first_key = next(iter(url_dict))
+                # new_value = url_dict[first_key][1:] # ! [description, tags_frequency] removed composite_relevance_score
+                # # new_value = url_dict[first_key]
+                # url_dict[first_key] = new_value
+                # result_url_group.append(url_dict)
 
-            results_dict[url_group_key] = result_url_group
+            results_dict[url_group_key] = top_five_sorted_url_group
 
         return results_dict
     except Exception as e:
