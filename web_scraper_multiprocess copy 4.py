@@ -9,7 +9,7 @@ from multiprocessing.pool import ThreadPool
 from click import group
 # import threading
 # from pathos.multiprocessing import ProcessingPool as Pool
-import dill
+# import dill
 # import multiprocessing_on_dill as multiprocessing
 # from xml import dom
 
