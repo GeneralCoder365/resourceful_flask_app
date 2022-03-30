@@ -1,3 +1,6 @@
+import time
+imports_time = time.time()
+
 from multiprocessing.pool import ThreadPool
 import multiprocessing
 
@@ -13,9 +16,11 @@ from nltk.corpus import stopwords
 # stop_words = list(get_stop_words('en'))
 nltk_stopwords = list(stopwords.words('english'))
 
-import spacy
-nlp = spacy.load('en_core_web_lg')
-
+sub_time = time.time()
+import spacy # ! 6 secs
+nlp = spacy.load('en_core_web_lg') # ! 2 secs
+print("SUB IMPORTS FINISHED --- %s seconds ---" % (time.time() - sub_time))
+print("IMPORTS FINISHED --- %s seconds ---" % (time.time() - imports_time))
 
 def text_cleaner(description):
     description = str(description).lower()

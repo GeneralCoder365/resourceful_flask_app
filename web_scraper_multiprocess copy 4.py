@@ -9,7 +9,7 @@ from multiprocessing.pool import ThreadPool
 from click import group
 # import threading
 # from pathos.multiprocessing import ProcessingPool as Pool
-# import dill
+import dill
 # import multiprocessing_on_dill as multiprocessing
 # from xml import dom
 
@@ -176,7 +176,7 @@ def url_grouper(url_dicts_array):
 
         if key_to_search in url_groups.keys():
             entry = url_groups[key_to_search]
-            entry = entry | {url: [composite_relevance_score, description, tags_frequency]} # joins dicts conveniently
+            entry = {**entry, **{url: [composite_relevance_score, description, tags_frequency]}} # joins dicts conveniently
             # entry.append({
                 # url: [composite_relevance_score, description, tags_frequency]
             # })
@@ -189,8 +189,8 @@ def url_grouper(url_dicts_array):
     internal_size = 0
     for key, value in url_groups.items():
         internal_size += len(value)
-    print("INTERNAL SIZE: ", internal_size)
-    print("GROUPS COUNT: ", len(url_groups))
+    # print("INTERNAL SIZE: ", internal_size)
+    # print("GROUPS COUNT: ", len(url_groups))
     
     return url_groups
 
@@ -208,11 +208,13 @@ def results_formatter(url_groups):
             # url_group: dict with {url: [composite_relevance_score, description, tags_frequency], ...}
             
             sorted_url_group = dict(sorted(url_group.items(), key=lambda item: item[1][0], reverse=True))
+            # print("SORTED URL GROUP: ", len(sorted_url_group))
             if (len(sorted_url_group) > 5):
-                top_five_sorted_url_group = {k: sorted_url_group[k] for k in sorted_url_group.keys()[:5]}
+                top_five_sorted_url_group = {k: sorted_url_group[k] for k in list(sorted_url_group.keys())[:5]}
             else:
                 top_five_sorted_url_group = sorted_url_group
-            
+            # print("LEN TOP 5 SORTED URL GROUP: ", len(top_five_sorted_url_group))
+            # print("TOP 5 SORTED URL GROUP: ", top_five_sorted_url_group)
             # url_group.sort(key=sort_by, reverse=True)
             # url_group = url_group[:5]
             
@@ -222,13 +224,7 @@ def results_formatter(url_groups):
                 removed_relevance_score = data.pop(0)
                 top_five_sorted_url_group[url] = data
             
-            # result_url_group = []
-            # for url_dict in url_group:
-                # first_key = next(iter(url_dict))
-                # new_value = url_dict[first_key][1:] # ! [description, tags_frequency] removed composite_relevance_score
-                # # new_value = url_dict[first_key]
-                # url_dict[first_key] = new_value
-                # result_url_group.append(url_dict)
+            # print("SUB RESULT DICT: ", top_five_sorted_url_group)
 
             results_dict[url_group_key] = top_five_sorted_url_group
 
@@ -242,6 +238,7 @@ def results_formatter(url_groups):
 
 
 def url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict):
+    time_url = time.time()
     url_dict = base_url_dict.copy()
     url_dict["url"] = url
     description = str(overview_finder(top_session, url))
@@ -251,7 +248,9 @@ def url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to
     # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
     # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
     # relevance_thread_parameters.append(relevance_thread_parameter)
-    
+    print("TIME URL: ", url, "finished --- %s seconds ---" % (time.time() - time_url))
+    # TIME URL:  https://www.mathnasium.com/rockville finished --- 5.4937379360198975 seconds ---
+    # ! SOME OF THESE WEBSITES JUST TAKE FOREVER TO LOAD CAN'T HELP IT :(
     return relevance_thread_parameter
 
 def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relevant_words_dict):
@@ -282,6 +281,7 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
         
         tags_to_compare_relevant_words_dict = {}
 
+        
         for tag in tags_to_compare_to:
             tag = tag.lower().strip()
             if (tag not in relevant_words_dict.keys()):
@@ -294,17 +294,6 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
         
         if (len(urls_to_search) == 0):
             print("WEIRD SHIT IS HAPPENING")
-        
-        # for url in urls_to_search:
-        #     url_dict = base_url_dict.copy()
-        #     url_dict["url"] = url
-        #     description = str(overview_finder(top_session, url))
-        #     url_dict["description"] = description
-        #     # relevance_process = multiprocessing.Process(target=relevance_calculator, args=(tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict, top_queue))
-        #     relevance_thread_parameter = (tags_to_compare_to, tags_to_compare_relevant_words_dict, url_dict)
-        #     # relevance_thread_parameters_print = (tags_to_compare_to, url_dict)
-        #     # print("RELEVANCE THREAD PARAMETERS: ", relevance_thread_parameters_print)
-        #     relevance_thread_parameters.append(relevance_thread_parameter)
         
         # url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict)
         with ThreadPool() as urls_slave_pool:
@@ -342,7 +331,7 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
         
     print("RELEVANCE PROCESSES READY FOR EXECUTION")
     print("PRE TOP STUFF finished --- %s seconds ---" % (time.time() - pre_top_time))
-    # ! PRE TOP STUFF finished --- 11.370482921600342 seconds ---
+    # ! PRE TOP STUFF finished --- 7.004076957702637 seconds ---
     print("RELEVANCE PARAMETERS LENGTH: ", len(relevance_threads_parameters))
     needs_to_be_length = 0
     for i in all_urls_to_search:
@@ -360,6 +349,9 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
     relevance_calculator = relevance_analyzer_v2.result_relevance_calculator
     print("SPACY IMPORT FINISHED --- %s seconds ---" % (time.time() - spacy_time))
     # ! SPACY IMPORT FINISHED --- 11.687415361404419 seconds ---
+    # ! Spacy itself is taking 8 of those secs, 1 is delay, and 2 is other imports
+        # ! 6 secs for import spacy
+        # ! 2 secs for nlp = spacy.load('en_core_web_lg')
     
     
     top_time = time.time()
@@ -387,14 +379,14 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
     url_groups = url_grouper(url_dicts_array)
     print("URL groups: ", url_groups)
     results_dict = results_formatter(url_groups)
-    print("RESULTS DICT: ", results_dict)
+    # print("RESULTS DICT: ", results_dict)
     print("POST PROCESSING FINISHED --- %s seconds ---" % (time.time() - post_processing_time))
     
     
-    # return results_dict
+    return results_dict
 
 # @profile
-def master_scraper(tags, master_queue):
+def master_scraper(tags):
     # if __name__ == '__main__':
     
     try:
@@ -466,29 +458,25 @@ def master_scraper(tags, master_queue):
         print("PRE RELEVANCE STUFF finished --- %s seconds ---" % (time.time() - dom_time))
         # ! PRE RELEVANCE STUFF finished --- 34.89859437942505 seconds ---
         
-        # relevance_optimization_process = multiprocessing.Process(target=master_results, args=(all_urls_to_search, dom_queue))
-        # relevance_optimization_process.start()
-        # print("ZEBOOBOO")
-        # while dom_queue.qsize() == 0:
-        #     pass
-        # print("DOM_QUEUE SIZE AFTER FINISHING MASTER_RESULTS = ", dom_queue.qsize())
-        # dom_results = dom_queue.get()
-        # # dom_results = dill.loads(dom_results)
-        # print("GEEBOOBOO")
-        # relevance_optimization_process.terminate()
-        # print("RELEVANCE OPTIMIZATION PROCESS IS ALIVE: ", relevance_optimization_process.is_alive())
-        # print("DOM_RESULTS: ", dom_results)
-        # print("DOM_QUEUE SIZE = ", dom_queue.qsize())
-        
         print("STARTING RELEVANCE OPTIMIZATION PROCESS")
         dom_results = master_relevance_analyzer(all_urls_to_search, relevant_words_dict)
+        if (dom_results != None):
+            print("READY FOR MASTER PUT")
+        else:
+            print("NOOOOOOOOOOOOOO")
         print("FINISHED RELEVANCE OPTIMIZATION PROCESS")
-        print("RESULTS DICT: ", dom_results)
+        # print("RESULTS DICT: ", dom_results)
         
         dom_queue.close()
         
-        # return dom_results
-        master_queue.put(dom_results)
+        # pickled_dom_results = dill.dumps(dom_results)
+        
+        return dom_results
+        # master_queue.put(pickled_dom_results)
+        # if (master_queue.qsize() > 0):
+        #     print("FINISHED MASTER PUT")
+        # else:
+        #     print("FMLLLL")
         
     
     except Exception as e:
@@ -503,21 +491,21 @@ tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine le
 # ! total runtime without multiprocessing/multithreading: 4 minutes and 25 seconds
 # ! TOTAL RUNTIME WITH MULTIPROCESSING/MULTITHREADING: 1 minute and 58 seconds
 if __name__ == '__main__':
-    multiprocessing.set_start_method('spawn', True)
+    # multiprocessing.set_start_method('spawn', True)
+    # master_queue = multiprocessing.Queue()
+    # master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
+    # master_process.start()
+    # # master_process.join()
+    # while master_queue.qsize() == 0:
+    #     pass
+    # pickled_master_output = master_queue.get()
+    # master_output = dill.loads(pickled_master_output)
+    # master_process.terminate()
+    # master_queue.close()
     start_time = time.time()
-    master_queue = multiprocessing.Queue()
-    master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
-    master_process.start()
-    # master_process.join()
-    while True:
-        if (master_queue.qsize() != 0):
-            master_output = master_queue.get()
-            break
-    # master_output = master_queue.get()
-    master_process.terminate()
-    master_queue.close()
-
+    master_output = master_scraper(tags)
     print("MASTER OUTPUT: ", master_output)
+    # print(len(master_output))
     print("Process finished --- %s seconds ---" % (time.time() - start_time))
 
 # if __name__ == '__main__':
