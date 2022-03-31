@@ -97,14 +97,24 @@ def query_maker(tags, relevant_words_dict, dom_queue):
                 search_dict["search_query"] = search_query
                 search_dict["skill_interest"] = skills_interests_list[j]
                 search_dict["type_of_opportunity"] = type_of_opportunity[i]
-                search_dict["in_person_online"] = in_person_online
                 
-                if (in_person_online != "online"):
+                if (in_person_online != "all"):
+                    search_dict["in_person_online"] = in_person_online
+                if (in_person_online == "in person"):
                     search_dict["location"] = str(location)
                 
+                if (in_person_online == "all"):
+                    search_dict_1 = search_dict.copy()
+                    search_dict["in_person_online"] = "online"
+                    search_queries.append(search_dict)
+                    search_dict_1["in_person_online"] = "in person"
+                    search_dict_1["location"] = str(location)
+                    search_queries.append(search_dict_1)
+                else:
+                    search_queries.append(search_dict)
                 # print("search_dict: ", search_dict)
         
-                search_queries.append(search_dict)
+                
                 # print("current_search_queries: ", search_queries)
     
     # return search_queries

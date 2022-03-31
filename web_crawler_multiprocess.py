@@ -102,8 +102,8 @@ def coursera_searcher(search_query, slave_queue):
         # makes chrome fullscreen
         options = Options()
         options.headless = True
-        # options.add_argument("--kiosk")
-        # options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
+        options.add_argument("--kiosk")
+        options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(options=options)
         
@@ -129,20 +129,23 @@ def coursera_searcher(search_query, slave_queue):
         sleep(1)
 
         # Searches for search field button
-        search_field_button = browser.find_element(By.XPATH, "//button[@aria-label = 'Search Coursera']")
-        search_field_button.click()
+        # search_field_button = browser.find_element(By.XPATH, "//button[@aria-label = 'Search Coursera']")
+        # search_field_button.click()
         
         
-        sleep(0.5)
+        # sleep(0.5)
         
         # Search for the query
         search_input_field = browser.find_element(By.XPATH, "//input[@type = 'text']") # '//input[@aria-label = "What do you want to learn?"]')
-        typist(search_input_field, search_query)
+        # print(search_input_field)
+        search_input_field_refreshed = browser.find_element(By.XPATH, "//input[@type = 'text']") # ! refreshes the element to avoid it getting stale
+        typist(search_input_field_refreshed, search_query)
         
         sleep(0.5)
         
         # searches for the query
-        search_input_field.send_keys(keys.ENTER)
+        search_input_field_refreshed_1 = browser.find_element(By.XPATH, "//input[@type = 'text']") # ! refreshes the element to avoid it getting stale
+        search_input_field_refreshed_1.send_keys(keys.ENTER)
         
         sleep(2)
         
@@ -167,10 +170,13 @@ def coursera_searcher(search_query, slave_queue):
         print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
         print("Didn't work :(")
 
-        return False
+        # return False
+        slave_queue.put(False)
 
 # search_query = "computer science"
-# print(coursera_searcher(search_query))
+# slave_queue = multiprocessing.Queue()
+# coursera_searcher(search_query, slave_queue)
+# print(slave_queue.get())
 
 def oer_commons_searcher(search_query, slave_queue):
     try:
@@ -782,28 +788,46 @@ def databases_to_search_analyzer(search_dict, sub_queue):
     for slv_process in slave_processes:
         slv_process.start()
         print("SLAVE PROCESS STARTED")
-    for slv_process in slave_processes:
-        print("SLAVE PROCESS FINISHING")
-    #     # ! WORKING UP TO HERE BUT DEVTOOLS NOT SHOWING
-    #     # ! NOT PRINTING GOOGLE 0, 1 or COURSERA 0, 1 or OER COMMONS 0, 1
-        slv_process.join()
-        print("SLAVE PROCESS FINISHED")
+    # for slv_process in slave_processes:
+    #     print("SLAVE PROCESS FINISHING")
+    # #     # ! WORKING UP TO HERE BUT DEVTOOLS NOT SHOWING
+    # #     # ! NOT PRINTING GOOGLE 0, 1 or COURSERA 0, 1 or OER COMMONS 0, 1
+    #     slv_process.join()
+    #     print("SLAVE PROCESS FINISHED")
+    prev_count = 0
+    while (slave_queue.qsize() != len(slave_processes)):
+        if (slave_queue.qsize() != prev_count):
+            print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
+            prev_count = slave_queue.qsize()
+        if (slave_queue.qsize() == len(slave_processes)):
+            print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
+            for i in range(slave_queue.qsize()):
+                result = slave_queue.get()
+                # print("RESULT: ", result)
+                if (result != False):
+                    if (len(result) > 0):
+                        urls_to_search.extend(result)
+            for slv_process in slave_processes:
+                slv_process.terminate()
+            break
+        pass
     
     # google_results = slave_queue.get() # gets the result from the slave_queue
     
     # if (len(google_results) > 0):
     #     urls_to_search.extend(google_results)
     
-    for i in range(slave_queue.qsize()):
-        result = slave_queue.get()
-        # print("RESULT: ", result)
-        if (len(result) > 0):
-            urls_to_search.extend(result)
+    # for i in range(slave_queue.qsize()):
+    #     result = slave_queue.get()
+    #     # print("RESULT: ", result)
+    #     if (result != False):
+    #         if (len(result) > 0):
+    #             urls_to_search.extend(result)
     
     # slave_processes[0].terminate()
     # slave_processes[1].terminate()
-    for slv_process in slave_processes:
-        slv_process.terminate()
+    # for slv_process in slave_processes:
+    #     slv_process.terminate()
     
     slave_queue.close()
     

@@ -40,7 +40,14 @@ def master_query_maker(tags, relevant_words_dict, dom_queue):
 
 def master_web_crawler(search_queries, dom_queue):
     import web_crawler_multiprocess
-    web_crawler_multiprocess.master_urls_to_search(search_queries, dom_queue)
+    try:
+        web_crawler_multiprocess.master_urls_to_search(search_queries, dom_queue)
+    except Exception as e:
+        print("Error: " + str(e))
+        print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
+        print("Didn't work :(")
+
+        return False
 
 def overview_finder(bottom_session, url):
     text_list = []
@@ -162,7 +169,9 @@ def url_grouper(url_dicts_array):
             skill_interest = skill_interest.replace(" ", "-")
             key_to_search += skill_interest + " "
         if "in_person_online" in url_dict.keys():
-            key_to_search += url_dict["in_person_online"] + " "
+            in_person_online = (url_dict["in_person_online"]).strip()
+            in_person_online = in_person_online.replace(" ", "-")
+            key_to_search += in_person_online + " "
         if "location" in url_dict.keys():
             key_to_search += url_dict["location"] + " "
             # has_location = True
