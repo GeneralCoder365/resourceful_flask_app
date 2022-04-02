@@ -285,6 +285,8 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
         # tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
         if (in_person_online == "online"):
             tags_to_compare_to = [skill_interest, type_of_opportunity, in_person_online]
+        elif (in_person_online == "all"):
+            tags_to_compare_to = [skill_interest, "online", "in person", type_of_opportunity, location]
         else:
             tags_to_compare_to = [skill_interest, type_of_opportunity, location]
         
@@ -292,6 +294,8 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
 
         
         for tag in tags_to_compare_to:
+            print(type(tags_to_compare_relevant_words_dict))
+            print(type(relevant_words_dict))
             tag = tag.lower().strip()
             if (tag not in relevant_words_dict.keys()):
                 print("TAG NOT IN RELEVANT WORDS DICT: ", tag)
@@ -395,7 +399,7 @@ def master_relevance_analyzer(all_urls_to_search, relevant_words_dict): # ! just
     return results_dict
 
 # @profile
-def master_scraper(tags):
+def master_scraper(tags, master_queue):
     # if __name__ == '__main__':
     
     try:
@@ -480,12 +484,13 @@ def master_scraper(tags):
         
         # pickled_dom_results = dill.dumps(dom_results)
         
-        return dom_results
+        # return dom_results
+        master_queue.put(dom_results)
         # master_queue.put(pickled_dom_results)
-        # if (master_queue.qsize() > 0):
-        #     print("FINISHED MASTER PUT")
-        # else:
-        #     print("FMLLLL")
+        if (master_queue.qsize() > 0):
+            print("FINISHED MASTER PUT")
+        else:
+            print("FMLLLL")
         
     
     except Exception as e:
@@ -500,19 +505,21 @@ tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine le
 # ! total runtime without multiprocessing/multithreading: 4 minutes and 25 seconds
 # ! TOTAL RUNTIME WITH MULTIPROCESSING/MULTITHREADING: 1 minute and 58 seconds
 if __name__ == '__main__':
-    # multiprocessing.set_start_method('spawn', True)
-    # master_queue = multiprocessing.Queue()
-    # master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
-    # master_process.start()
-    # # master_process.join()
-    # while master_queue.qsize() == 0:
-    #     pass
+    start_time = time.time()
+    multiprocessing.set_start_method('spawn', True)
+    master_queue = multiprocessing.Queue()
+    master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
+    master_process.start()
+    # master_process.join()
+    while master_queue.qsize() == 0:
+        pass
+    master_output = master_queue.get()
     # pickled_master_output = master_queue.get()
     # master_output = dill.loads(pickled_master_output)
-    # master_process.terminate()
-    # master_queue.close()
-    start_time = time.time()
-    master_output = master_scraper(tags)
+    master_process.terminate()
+    master_queue.close()
+    
+    # master_output = master_scraper(tags)
     print("MASTER OUTPUT: ", master_output)
     # print(len(master_output))
     print("Process finished --- %s seconds ---" % (time.time() - start_time))

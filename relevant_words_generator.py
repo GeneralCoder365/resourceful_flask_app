@@ -116,6 +116,10 @@ def dom_relevant_words_generator(tag):
 
 def master_relevant_words_generator(tags, dom_queue):
     relevant_words_dict = {}
+    if ("all" in tags):
+        remove_all_value = tags.pop(tags.index("all"))
+        tags.append("in person")
+        tags.append("online")
     
     for tag in tags:
         if (tag not in relevant_words_dict):
@@ -124,6 +128,7 @@ def master_relevant_words_generator(tags, dom_queue):
             if (len(tag.split()) > 1):
                 acronym = acronym_generator(tag)
                 acronym_set = {acronym}
+
                 tag_set = dom_relevant_words_generator(tag)
                 relevant_words_dict[tag] = tag_set.union(acronym_set)
                 for sub_tag in tag.split():
