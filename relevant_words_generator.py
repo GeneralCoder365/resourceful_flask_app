@@ -121,6 +121,8 @@ def master_relevant_words_generator(tags, dom_queue):
         tags.append("in person")
         tags.append("online")
     
+    print("TAGS: ", tags)
+    
     for tag in tags:
         if (tag not in relevant_words_dict):
             # removes leading and trailing whitespaces

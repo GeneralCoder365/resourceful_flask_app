@@ -842,21 +842,21 @@ def databases_to_search_analyzer(search_dict, sub_queue):
     sub_queue.put(urls_to_search_dict)
 
 def master_urls_to_search(search_queries, dom_queue):
-    print("SEARCH QUERIES: ", search_queries)
+    # print("SEARCH QUERIES: ", search_queries)
     
     # if __name__ == '__main__':
-    print("TESTING 1")
+    # print("TESTING 1")
     urls_to_search = []
     sub_queue = multiprocessing.Queue()
     sub_processes = []
     for i in range(len(search_queries)):
         search_dict = search_queries[i]
-        print("SEARCH DICT ", (i + 1), ": ", search_dict)
+        # print("SEARCH DICT ", (i + 1), ": ", search_dict)
         # if __name__ == '__main__':
         databases_search_process = multiprocessing.Process(target=databases_to_search_analyzer, args=(search_dict, sub_queue))
         sub_processes.append(databases_search_process)
     
-    print("FINISHED ADDING TO SUB_QUEUE")
+    # print("FINISHED ADDING TO SUB_QUEUE")
     
     # sub_processes[0].start()
     # sub_processes[1].start()
@@ -865,12 +865,12 @@ def master_urls_to_search(search_queries, dom_queue):
     
     for s in range(len(sub_processes)):
         sub_processes[s].start()
-        print("STARTED A SUB_PROCESS")
+        # print("STARTED A SUB_PROCESS")
     
     for u in range(len(sub_processes)):
-        print("FINISHING A SUB_PROCESS")
+        # print("FINISHING A SUB_PROCESS")
         sub_processes[u].join()
-        print("FINISHED A SUB_PROCESS")
+        # print("FINISHED A SUB_PROCESS")
     
     # for s_process in sub_processes:
     #     s_process.start()
@@ -883,8 +883,8 @@ def master_urls_to_search(search_queries, dom_queue):
     #     s_process.join()
     #     print("FINISHED A SUB_PROCESS")
 
-    print("TESTING 2")
-    print("SUB_QUEUE SIZE = ", int(sub_queue.qsize()))
+    # print("TESTING 2")
+    # print("SUB_QUEUE SIZE = ", int(sub_queue.qsize()))
     
     for j in range(sub_queue.qsize()):
         search_process_result = sub_queue.get()
@@ -899,12 +899,12 @@ def master_urls_to_search(search_queries, dom_queue):
     for b in range(len(sub_processes)):
         sub_processes[b].terminate()
     
-    print("TESTING 3")
+    # print("TESTING 3")
     
     sub_queue.close()
             # urls_to_search.append(databases_to_search_analyzer(search_dict))
     
-    print("TESTING 4")
+    # print("TESTING 4")
     
     # wait = os.wait()
     # print("Child process with number %d exited" % (wait[0]))
