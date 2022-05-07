@@ -133,11 +133,12 @@ def master_relevant_words_generator(tags, dom_queue):
 
                 tag_set = dom_relevant_words_generator(tag)
                 relevant_words_dict[tag] = tag_set.union(acronym_set)
-                for sub_tag in tag.split():
-                    if (sub_tag not in relevant_words_dict):
-                        sub_tag_set = dom_relevant_words_generator(sub_tag)
-                        relevant_words_dict[sub_tag] = sub_tag_set
-                        print("SUB TAG ADDED")
+                if (tag != "in person"):
+                    for sub_tag in tag.split():
+                        if (sub_tag not in relevant_words_dict):
+                            sub_tag_set = dom_relevant_words_generator(sub_tag)
+                            relevant_words_dict[sub_tag] = sub_tag_set
+                            print("SUB TAG ADDED")
             else:
                 tag_set = dom_relevant_words_generator(tag)
                 relevant_words_dict[tag] = tag_set
@@ -157,7 +158,21 @@ def master_relevant_words_generator(tags, dom_queue):
 #     import time
 #     start_time = time.time()
     
-#     master_relevant_words_dict = master_relevant_words_generator(['dog cat', 'hat', 'math'])
+#     dom_queue = multiprocessing.Queue()
+    
+#     # master_relevant_words_dict = master_relevant_words_generator(['dog cat', 'hat', 'math', 'online'])
+#     generator_process = multiprocessing.Process(target=master_relevant_words_generator, args=(['dog cat', 'hat', 'math', 'all'], dom_queue))
+#     generator_process.start()
+#     while dom_queue.qsize() == 0:
+#         if (dom_queue.qsize() != 0):
+#             break
+#     master_relevant_words_dict = dom_queue.get()
+#     generator_process.terminate()
+    
+#     dom_queue.close()
+    
+#     if ("online" in master_relevant_words_dict.keys()):
+#         print("YEABOI")
 #     # print(master_relevant_words_dict)
     
 #     print("Process finished --- %s seconds ---" % (time.time() - start_time))

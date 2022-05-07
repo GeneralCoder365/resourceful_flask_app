@@ -929,6 +929,7 @@ def master_urls_to_search(search_queries, dom_queue):
 
 # if __name__ == '__main__':
 #     dom_queue = multiprocessing.Queue()
+#     search_queries = [{'search_query': 'math ', 'skill_interest': 'math', 'type_of_opportunity': 'courses', 'in_person_online': 'online'}]
 #     dom_process = multiprocessing.Process(target=master_urls_to_search, args=(search_queries, dom_queue))
 #     dom_process.start()
 #     dom_process.join()

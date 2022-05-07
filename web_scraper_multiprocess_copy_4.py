@@ -306,7 +306,8 @@ def group_of_urls_to_search_sub_func(group_of_urls_to_search, top_session, relev
                     tags_to_compare_relevant_words_dict[sub_tag] = relevant_words_dict[sub_tag]
         
         if (len(urls_to_search) == 0):
-            print("WEIRD SHIT IS HAPPENING")
+            print("WEIRD SHIT IS HAPPENING FOR TAG [", tags_to_compare_to, "] ", urls_to_search)
+            print("GROUP OF URLS TO SEARCH WHERE URLS TO SEARCH IS EMPTY: ", group_of_urls_to_search)
         
         # url_to_search_slave_func(base_url_dict, url, top_session, tags_to_compare_to, tags_to_compare_relevant_words_dict)
         with ThreadPool() as urls_slave_pool:
@@ -413,13 +414,13 @@ def master_scraper(tags, master_queue):
         # tags:  {'skills': ['computer science', 'cs', 'math'], 'interests': ['machine learning', 'probability'], 'type_of_opportunity': ['courses'], 'in_person_online': 'all', 'location': 'Rockville MD USA'}
         tags_array = []
         for category, category_tags in tags.items():
-            if ((category == "in_person_online") and (category_tags != "online")):
-                pass
-            else:
-                if (type(category_tags) == list):
-                    tags_array += category_tags
-                elif (type(category_tags) == str):
-                    tags_array.append(category_tags)
+            # if ((category == "in_person_online") and (category_tags != "online")):
+            #     pass
+            # else:
+            if (type(category_tags) == list):
+                tags_array += category_tags
+            elif (type(category_tags) == str):
+                tags_array.append(category_tags)
         print("tags_array: ", tags_array)
         
         
