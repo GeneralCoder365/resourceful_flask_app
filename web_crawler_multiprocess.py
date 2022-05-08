@@ -797,16 +797,15 @@ def databases_to_search_analyzer(search_dict, sub_queue):
     prev_count = 0
     while (slave_queue.qsize() != len(slave_processes)):
         if (slave_queue.qsize() != prev_count):
-            print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
+        #     print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
             prev_count = slave_queue.qsize()
         if (slave_queue.qsize() == len(slave_processes)):
-            print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
+        #     print("QUEUE SIZE: ", slave_queue.qsize(), " OF ", len(slave_processes))
             for i in range(slave_queue.qsize()):
                 result = slave_queue.get()
-                # print("RESULT: ", result)
-                if (result != False):
-                    if (len(result) > 0):
-                        urls_to_search.extend(result)
+        #         # print("RESULT: ", result)
+                if ((result != False) and (len(result) > 0)):
+                    urls_to_search.extend(result)
             for slv_process in slave_processes:
                 slv_process.terminate()
             break
@@ -867,10 +866,12 @@ def master_urls_to_search(search_queries, dom_queue):
         sub_processes[s].start()
         # print("STARTED A SUB_PROCESS")
     
-    for u in range(len(sub_processes)):
+    # for u in range(len(sub_processes)):
         # print("FINISHING A SUB_PROCESS")
-        sub_processes[u].join()
+        # sub_processes[u].join()
         # print("FINISHED A SUB_PROCESS")
+    while (sub_queue.qsize() != len(sub_processes)):
+        pass
     
     # for s_process in sub_processes:
     #     s_process.start()
