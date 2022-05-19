@@ -39,9 +39,9 @@ def master_query_maker(tags, relevant_words_dict, dom_queue):
     resource_finder.query_maker(tags, relevant_words_dict, dom_queue)
 
 def master_web_crawler(search_queries, dom_queue):
-    import web_crawler_multiprocess_copy
+    import web_crawler_multiprocess
     try:
-        web_crawler_multiprocess_copy.master_urls_to_search(search_queries, dom_queue)
+        web_crawler_multiprocess.master_urls_to_search(search_queries, dom_queue)
     except Exception as e:
         print("Error: " + str(e))
         print("Error on line {}".format(sys.exc_info()[-1].tb_lineno))
