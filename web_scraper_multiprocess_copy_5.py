@@ -511,7 +511,7 @@ def master_scraper(tags, master_queue):
 
 
 # ! ALL TEST CASE
-tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine learning", "probability"], "type_of_opportunity": ["courses"], "in_person_online": "all", "location": "Rockville MD USA"}'
+# tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine learning", "probability"], "type_of_opportunity": ["courses"], "in_person_online": "all", "location": "Rockville MD USA"}'
 
 # ! ONLINE TEST CASE
 # tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine learning", "probability"], "type_of_opportunity": ["courses"], "in_person_online": "online", "location": "Rockville MD USA"}'
@@ -522,25 +522,25 @@ tags = '{"skills": ["computer science", "cs", "math"], "interests": ["machine le
 
 # ! total runtime without multiprocessing/multithreading: 4 minutes and 25 seconds
 # ! TOTAL RUNTIME WITH MULTIPROCESSING/MULTITHREADING: 1 minute and 58 seconds
-if __name__ == '__main__':
-    start_time = time.time()
-    multiprocessing.set_start_method('spawn', True)
-    master_queue = multiprocessing.Queue()
-    master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
-    master_process.start()
-    # master_process.join()
-    while master_queue.qsize() == 0:
-        pass
-    master_output = master_queue.get()
-    # pickled_master_output = master_queue.get()
-    # master_output = dill.loads(pickled_master_output)
-    master_process.terminate()
-    master_queue.close()
+# if __name__ == '__main__':
+#     start_time = time.time()
+#     multiprocessing.set_start_method('spawn', True)
+#     master_queue = multiprocessing.Queue()
+#     master_process = multiprocessing.Process(target=master_scraper, args=(tags, master_queue))
+#     master_process.start()
+#     # master_process.join()
+#     while master_queue.qsize() == 0:
+#         pass
+#     master_output = master_queue.get()
+#     # pickled_master_output = master_queue.get()
+#     # master_output = dill.loads(pickled_master_output)
+#     master_process.terminate()
+#     master_queue.close()
     
-    # master_output = master_scraper(tags)
-    print("MASTER OUTPUT: ", master_output)
-    # print(len(master_output))
-    print("Process finished --- %s seconds ---" % (time.time() - start_time))
+#     # master_output = master_scraper(tags)
+#     print("MASTER OUTPUT: ", master_output)
+#     # print(len(master_output))
+#     print("Process finished --- %s seconds ---" % (time.time() - start_time))
 
 # if __name__ == '__main__':
 #     dom_queue = multiprocessing.Queue()
