@@ -42,7 +42,7 @@ tensorboard-plugin-wit==1.8.1
 tensorflow==2.8.0
 tensorflow-io-gcs-filesystem==0.24.0
 termcolor==1.1.0
-tf-estimator-nightly-2.8.0.dev2021122109
+tf-estimator-nightly==2.8.0.dev2021122109
 threadpoolctl==3.1.0
 typing-extensions==4.1.1
 unidecode==1.3.2
@@ -104,9 +104,8 @@ srsly==2.4.2
 thinc==8.0.13
 typer==0.4.0
 wasabi==0.9.0
-llvmlit==0.38.0
+llvmlite==0.38.0
 numba==0.55.1
-en-core-web-lg==3.2.0
 bs4==0.0.1
 futures==2.2.0
 goslate==1.5.2

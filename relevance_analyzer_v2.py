@@ -20,7 +20,12 @@ nltk_stopwords = list(stopwords.words('english'))
 
 sub_time = time.time()
 import spacy # ! 6 secs
-nlp = spacy.load('en_core_web_lg') # ! 2 secs
+try:
+    nlp = spacy.load('en_core_web_lg') # ! 2 secs
+except:
+    spacy.cli.download("en_core_web_lg")
+    nlp = spacy.load("en_core_web_lg")
+
 print("SUB IMPORTS FINISHED --- %s seconds ---" % (time.time() - sub_time))
 print("IMPORTS FINISHED --- %s seconds ---" % (time.time() - imports_time))
 

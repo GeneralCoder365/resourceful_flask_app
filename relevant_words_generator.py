@@ -6,9 +6,17 @@ from autocorrect import Speller
 import re
 from collections import Counter
 
-from nltk.corpus import wordnet
-from nltk.corpus.reader.wordnet import WordNetError
-next(wordnet.words()) # ! Helps prevent AttributeError: 'WordNetCorpusReader' object has no attribute '_LazyCorpusLoader__args'
+import nltk
+nltk.download('omw-1.4')
+try:
+    from nltk.corpus import wordnet
+    from nltk.corpus.reader.wordnet import WordNetError
+    next(wordnet.words()) # ! Helps prevent AttributeError: 'WordNetCorpusReader' object has no attribute '_LazyCorpusLoader__args'
+except:
+    nltk.download('wordnet')
+    from nltk.corpus import wordnet
+    from nltk.corpus.reader.wordnet import WordNetError
+    next(wordnet.words()) # ! Helps prevent AttributeError: 'WordNetCorpusReader' object has no attribute '_LazyCorpusLoader__args'
 
 # import spacy
 # import numpy as np

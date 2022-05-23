@@ -75,28 +75,31 @@ def search():
     tags = str(tags).strip().lower()
     print(tags)
     
+    master_output = {}
+    # if __name__ == '__main__':
+    start_time = time.time()
+    print("TIT 1")
+    multiprocessing.set_start_method('spawn', True)
+    master_queue = multiprocessing.Queue()
+    master_process = multiprocessing.Process(target=ws_m_v5.master_scraper, args=(tags, master_queue))
+    master_process.start()
+    # master_process.join()
+    while master_queue.qsize() == 0:
+        pass
+    print("TIT 2")
+    master_output = master_queue.get()
+    # pickled_master_output = master_queue.get()
+    # master_output = dill.loads(pickled_master_output)
+    master_process.terminate()
+    master_queue.close()
+    print("TIT 3")
     
-    if __name__ == '__main__':
-        start_time = time.time()
-        multiprocessing.set_start_method('spawn', True)
-        master_queue = multiprocessing.Queue()
-        master_process = multiprocessing.Process(target=ws_m_v5.master_scraper, args=(tags, master_queue))
-        master_process.start()
-        # master_process.join()
-        while master_queue.qsize() == 0:
-            pass
-        master_output = master_queue.get()
-        # pickled_master_output = master_queue.get()
-        # master_output = dill.loads(pickled_master_output)
-        master_process.terminate()
-        master_queue.close()
-        
-        # master_output = master_scraper(tags)
-        print("MASTER OUTPUT: ", master_output)
-        # print(len(master_output))
-        print("Process finished --- %s seconds ---" % (time.time() - start_time))
+    # master_output = master_scraper(tags)
+    print("MASTER OUTPUT: ", master_output)
+    # print(len(master_output))
+    print("Process finished --- %s seconds ---" % (time.time() - start_time))
 
-    
+
     # data = {"tags": tags}
     data = master_output
     
