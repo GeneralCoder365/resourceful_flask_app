@@ -34,7 +34,10 @@ def google_searcher(search_query, slave_queue):
         # options.add_argument("--kiosk")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
-        browser = webdriver.Chrome(executable_path="./chromedriver.exe", options=options)
+        # .exe
+        # ./chromedriver
+        # /tmp/8da3cee20450d71
+        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         
@@ -105,7 +108,7 @@ def coursera_searcher(search_query, slave_queue):
         options.add_argument("--kiosk")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
-        browser = webdriver.Chrome(executable_path="./chromedriver.exe", options=options)
+        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         
@@ -188,7 +191,7 @@ def oer_commons_searcher(search_query, slave_queue):
         # options.add_argument("--kiosk")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
-        browser = webdriver.Chrome(executable_path="./chromedriver.exe", options=options)
+        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         

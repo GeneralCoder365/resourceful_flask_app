@@ -24,6 +24,8 @@ app.logger.setLevel(logging.ERROR)
 @app.route('/search', methods=["GET"])
 # @profile # marks function to be tracked for memory usage
 def search():
+    import os
+    print("CURRENT WORKING DIRECTORY: ", os.path.abspath(os.getcwd()))
     # tags = request.args.get('tags')
     # print("tags: ", tags)
     # tags = json.dumps(dict(json.loads(tags)))
