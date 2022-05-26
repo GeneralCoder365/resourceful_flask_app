@@ -12,6 +12,10 @@ from selenium.webdriver.support.ui import Select
 
 # ! NEED TO FORMAT SEARCH QUERIES FOR EACH DATABASE!!!
 
+import os
+path = str(os.path.abspath(os.getcwd())) + "/chromedriver"
+print("CURRENT WORKINg DIRECTORY WEB CRAWLER: ", path)
+
 def typist(element, text):
     # Deletes anything currently in the field
     element.send_keys(keys.CONTROL,"a")
@@ -25,7 +29,7 @@ def typist(element, text):
         # sleep(random_speeds[random.randint(0, (len(random_speeds) - 1))])
 
 def google_searcher(search_query, slave_queue):
-    try:
+    try:        
         # print("GOOGLE 0")
         # browser = webdriver.Firefox()
         # makes chrome fullscreen
@@ -37,7 +41,8 @@ def google_searcher(search_query, slave_queue):
         # .exe
         # ./chromedriver
         # /tmp/8da3cee20450d71
-        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
+        # /usr/local/bin/chromedriver
+        browser = webdriver.Chrome(executable_path=path, options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         
@@ -99,6 +104,7 @@ def google_searcher(search_query, slave_queue):
 
 def coursera_searcher(search_query, slave_queue):
     try:
+        path = str(os.path.abspath(os.getcwd()))
         # print("COURSERA 0")
         # print("COURSERA SEARCH QUERY: '" + search_query + "'")
         # browser = webdriver.Firefox()
@@ -108,7 +114,7 @@ def coursera_searcher(search_query, slave_queue):
         options.add_argument("--kiosk")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
-        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
+        browser = webdriver.Chrome(executable_path=path, options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         
@@ -191,7 +197,7 @@ def oer_commons_searcher(search_query, slave_queue):
         # options.add_argument("--kiosk")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
-        browser = webdriver.Chrome(executable_path="/tmp/8da3cee20450d71/chromedriver", options=options)
+        browser = webdriver.Chrome(executable_path=path, options=options)
         
         browser.implicitly_wait(5) # ! make headless when ready
         

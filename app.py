@@ -26,6 +26,9 @@ app.logger.setLevel(logging.ERROR)
 def search():
     import os
     print("CURRENT WORKING DIRECTORY: ", os.path.abspath(os.getcwd()))
+    print("ITEMS IN CURRENT DIRECTORY: ", os.listdir())
+    
+    print("THE PATH /usr/local/bin/chromedriver EXISTS: ", os.path.isfile("/usr/local/bin/chromedriver"))
     # tags = request.args.get('tags')
     # print("tags: ", tags)
     # tags = json.dumps(dict(json.loads(tags)))
