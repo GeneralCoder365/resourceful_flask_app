@@ -1,15 +1,24 @@
-FROM mcr.microsoft.com/azure-functions/python:4-python3.9
+FROM tiangolo/uwsgi-nginx-flask:python3.8
+
+# sets default shell for all commands to /bin/bash instead of /bin/sh
+# SHELL ["/bin/bash", "-c"]
+
+RUN mkdir /code
+WORKDIR /code
+ADD requirements.txt /code/
+RUN pip install -r requirements.txt --no-cache-dir
+ADD . /code/
 
 # 0. Install essential packages
-RUN apt-get update \
-    && apt-get install -y \
-        build-essential \
-        cmake \
-        git \
-        wget \
-        unzip \
-        unixodbc-dev \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update \
+#     && apt-get install -y \
+#         build-essential \
+#         cmake \
+#         git \
+#         wget \
+#         unzip \
+#         unixodbc-dev \
+#     && rm -rf /var/lib/apt/lists/*
 
 # 1. Install Chrome (root image is debian)
 # See https://stackoverflow.com/questions/49132615/installing-chrome-in-docker-file
@@ -23,9 +32,23 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # 2. Install Chrome driver used by Selenium
-RUN LATEST=$(wget -q -O - http://chromedriver.storage.googleapis.com/LATEST_RELEASE) && \
-    wget http://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip && \
-    unzip chromedriver_linux64.zip && ln -s $PWD/chromedriver /usr/local/bin/chromedriver
+# http://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip
+# LATEST=$(wget --no-verbose --output-document - http://chromedriver.storage.googleapis.com/LATEST_RELEASE)
+# ! -c is cpu shares weight
+# ! doing /bin/bash because shell is /bin/sh, but source expects /bin/bash, perhaps because it puts its initialization in ~/.bashrc
+# ! this causes /bin/sh: 1: MY_COMMAND: not found
+# /bin/bash -c "wget -q -O - http://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip | unzip -d /usr/local/bin -o"
+# LATEST=$()
+RUN /bin/bash -c 'LATEST=$`wget -q -O - https://chromedriver.storage.googleapis.com/LATEST_RELEASE`'
+#  \
+#   && wget -q -O - https://chromedriver.storage.googleapis.com/$LATEST/chromedriver_linux64.zip 
+  # | unzip -d /usr/local/bin -o \
+  # && chmod +x /usr/local/bin/chromedriver
+# && \  
+# RUN /bin/bash -c `wget http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip && \  
+#     unzip chromedriver_linux64.zip && ln -s $PWD/chromedriver /usr/local/bin/chromedriver`
+RUN /bin/bash -c 'wget -q -O - http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip'
+# | unzip -d /usr/local/bin/chromedriver -o`
 
 ENV PATH="/usr/local/bin/chromedriver:${PATH}"
 
@@ -38,3 +61,28 @@ COPY . /home/site/wwwroot
 # 5. Install other packages in requirements.txt
 RUN cd /home/site/wwwroot && \
     pip install -r requirements.txt
+
+# ssh
+ENV SSH_PASSWD "root:Docker!"
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends dialog \
+        && apt-get update \
+        && apt-get install -y \
+        build-essential \
+        cmake \
+        git \
+        wget \
+        unzip \
+        unixodbc-dev \
+    && rm -rf /var/lib/apt/lists/* \
+ && apt-get install -y --no-install-recommends openssh-server \
+ && echo "$SSH_PASSWD" | chpasswd 
+
+COPY sshd_config /etc/ssh/
+COPY init.sh /usr/local/bin/
+
+RUN chmod u+x /usr/local/bin/init.sh
+EXPOSE 8000 2222
+
+#CMD ["python", "/code/manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["init.sh"]
