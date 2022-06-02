@@ -3,11 +3,18 @@ FROM tiangolo/uwsgi-nginx-flask:python3.8
 # sets default shell for all commands to /bin/bash instead of /bin/sh
 # SHELL ["/bin/bash", "-c"]
 
+RUN apt update
+
 RUN mkdir /code
 WORKDIR /code
+
+# 0. Install essential packages
 ADD requirements.txt /code/
 RUN pip install -r requirements.txt --no-cache-dir
 ADD . /code/
+
+# 0.5: Apply django migrations
+# RUN python manage.py migrate
 
 # 0. Install essential packages
 # RUN apt-get update \
@@ -45,9 +52,13 @@ RUN /bin/bash -c 'LATEST=$`wget -q -O - https://chromedriver.storage.googleapis.
   # | unzip -d /usr/local/bin -o \
   # && chmod +x /usr/local/bin/chromedriver
 # && \  
-# RUN /bin/bash -c `wget http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip && \  
-#     unzip chromedriver_linux64.zip && ln -s $PWD/chromedriver /usr/local/bin/chromedriver`
-RUN /bin/bash -c 'wget -q -O - http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip'
+# 102.0.5005.61
+# ${LATEST}
+# /bin/bash -c `wget http://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip`
+RUN wget http://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip
+# && \  
+RUN unzip chromedriver_linux64.zip && ln -s $PWD/chromedriver /usr/local/bin/chromedriver
+# RUN /bin/bash -c 'wget -q -O - http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip'
 # | unzip -d /usr/local/bin/chromedriver -o`
 
 ENV PATH="/usr/local/bin/chromedriver:${PATH}"
@@ -58,31 +69,47 @@ RUN pip install -U selenium
 # 4. Finally, copy python code to image
 COPY . /home/site/wwwroot
 
-# 5. Install other packages in requirements.txt
-RUN cd /home/site/wwwroot && \
-    pip install -r requirements.txt
-
-# ssh
+# 6: Set Up ssh server
 ENV SSH_PASSWD "root:Docker!"
 RUN apt-get update \
         && apt-get install -y --no-install-recommends dialog \
         && apt-get update \
-        && apt-get install -y \
-        build-essential \
-        cmake \
-        git \
-        wget \
-        unzip \
-        unixodbc-dev \
-    && rm -rf /var/lib/apt/lists/* \
- && apt-get install -y --no-install-recommends openssh-server \
- && echo "$SSH_PASSWD" | chpasswd 
+	&& apt-get install -y --no-install-recommends openssh-server \
+	&& echo "$SSH_PASSWD" | chpasswd 
 
+
+# 7: Copy config files
 COPY sshd_config /etc/ssh/
 COPY init.sh /usr/local/bin/
 
+
+# # 5. Install other packages in requirements.txt
+# RUN cd /home/site/wwwroot && \
+#     pip install -r requirements.txt
+
+# ssh
+# ENV SSH_PASSWD "root:Docker!"
+# RUN apt-get update \
+#         && apt-get install -y --no-install-recommends dialog \
+#         && apt-get update \
+#         && apt-get install -y \
+#         build-essential \
+#         cmake \
+#         git \
+#         wget \
+#         unzip \
+#         unixodbc-dev \
+#     && rm -rf /var/lib/apt/lists/* \
+# && apt-get install -y --no-install-recommends openssh-server \
+    # ! OpenSSH is a connectivity tool for remote login that uses the SSH protocol so shouldn't need to be installed
+#  && echo "$SSH_PASSWD" | chpasswd 
+
+# COPY sshd_config /etc/ssh/
+# COPY init.sh /usr/local/bin/
+
 RUN chmod u+x /usr/local/bin/init.sh
 EXPOSE 8000 2222
+# EXPOSE 8000
 
 #CMD ["python", "/code/manage.py", "runserver", "0.0.0.0:8000"]
 ENTRYPOINT ["init.sh"]
