@@ -13,10 +13,18 @@ from collections import Counter
 
 from nltk import regexp_tokenize
 # from stop_words import get_stop_words
-from nltk.corpus import stopwords
 
-# stop_words = list(get_stop_words('en'))
-nltk_stopwords = list(stopwords.words('english'))
+try:
+    from nltk.corpus import stopwords
+    # stop_words = list(get_stop_words('en'))
+    nltk_stopwords = list(stopwords.words('english'))
+except:
+    import nltk
+    nltk.download('stopwords')
+    from nltk.corpus import stopwords
+    # stop_words = list(get_stop_words('en'))
+    nltk_stopwords = list(stopwords.words('english'))
+
 
 sub_time = time.time()
 import spacy # ! 6 secs
