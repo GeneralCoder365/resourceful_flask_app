@@ -13,7 +13,8 @@ from selenium.webdriver.support.ui import Select
 # ! NEED TO FORMAT SEARCH QUERIES FOR EACH DATABASE!!!
 
 import os
-path = str(os.path.abspath(os.getcwd())) + "/chromedriver"
+path = str(os.path.abspath(os.getcwd())) + "/chromedriver" # "/chromedriver.exe"
+# path = 'D:\\Personal_Folders\\Tocho\\Programming\\Apps\\Resourceful\\resourceful_flask_app\\chromedriver.exe'
 print("CURRENT WORKING DIRECTORY WEB CRAWLER: ", path)
 
 def typist(element, text):
@@ -36,10 +37,11 @@ def google_searcher(search_query, slave_queue):
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        # options.add_argument('--disable-blink-features=AutomationControlled')
         
         # ! allows chrome to run without crashing on docker image
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -104,21 +106,21 @@ def google_searcher(search_query, slave_queue):
 
         return False
 
-# search_query = "fetus deletus"
+# search_query = "heatus deletus"
 # print(google_searcher(search_query))
 
 def coursera_searcher(search_query, slave_queue):
     try:
-        path = str(os.path.abspath(os.getcwd()))
         # print("COURSERA 0")
         # print("COURSERA SEARCH QUERY: '" + search_query + "'")
         # browser = webdriver.Firefox()
         # makes chrome fullscreen
         options = Options()
-        options.headless = True
+        # options.headless = True # ! Coursera raises the Google One Tap Error if headless is used!!!
         options.add_argument("--kiosk")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(executable_path=path, options=options)
@@ -202,8 +204,9 @@ def oer_commons_searcher(search_query, slave_queue):
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument('--disable-blink-features=AutomationControlled')
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(executable_path=path, options=options)
@@ -956,15 +959,15 @@ def master_urls_to_search(search_queries, dom_queue):
 # ! 35 secs without multiprocessing, 13 secs with multiprocessing
 
 
-# if __name__ == '__main__':
-#     dom_queue = multiprocessing.Queue()
-#     search_queries = [{'search_query': 'math ', 'skill_interest': 'math', 'type_of_opportunity': 'courses', 'in_person_online': 'online'}]
-#     dom_process = multiprocessing.Process(target=master_urls_to_search, args=(search_queries, dom_queue))
-#     dom_process.start()
-#     dom_process.join()
-#     final_result = dom_queue.get()
-#     dom_process.terminate()
-#     dom_queue.close()
-#     print("master_urls_to_search: ", final_result)
+if __name__ == '__main__':
+    dom_queue = multiprocessing.Queue()
+    search_queries = [{'search_query': 'math ', 'skill_interest': 'math', 'type_of_opportunity': 'courses', 'in_person_online': 'online'}]
+    dom_process = multiprocessing.Process(target=master_urls_to_search, args=(search_queries, dom_queue))
+    dom_process.start()
+    dom_process.join()
+    final_result = dom_queue.get()
+    dom_process.terminate()
+    dom_queue.close()
+    print("master_urls_to_search: ", final_result)
 
 # print("master_urls_to_search: ", master_urls_to_search(search_queries))
