@@ -39,9 +39,10 @@ def google_searcher(search_query, slave_queue):
         # options.add_argument("--kiosk")
         # options.add_argument('--disable-blink-features=AutomationControlled')
         
-        # ! allows chrome to run without crashing on docker image
+        # ! allows chrome/chromedriver to run without crashing on docker image
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -121,6 +122,7 @@ def coursera_searcher(search_query, slave_queue):
         
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -209,6 +211,7 @@ def oer_commons_searcher(search_query, slave_queue):
         
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -278,8 +281,11 @@ def volunteer_match_searcher(search_query, in_person_online, slave_queue):
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(options=options)
@@ -349,8 +355,11 @@ def points_of_light_searcher(search_query, in_person_online, slave_queue):
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(options=options)
@@ -431,8 +440,11 @@ def aau_searcher(sport, location, slave_queue): # ! USA ONLY! and only returns t
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(options=options)
@@ -516,8 +528,11 @@ def student_support_accelerator_searcher(grade_level, search_query, slave_queue)
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
         # options.add_experimental_option("detach", True)
 
@@ -606,8 +621,11 @@ def indeed_searcher(search_query, in_person_online, slave_queue):
         options = Options()
         options.headless = True
         # options.add_argument("--kiosk")
+        
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--remote-debugging-port=9222")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(options=options)
