@@ -40,8 +40,8 @@ def google_searcher(search_query, slave_queue):
         # options.add_argument('--disable-blink-features=AutomationControlled')
         
         # ! allows chrome to run without crashing on docker image
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -119,8 +119,9 @@ def coursera_searcher(search_query, slave_queue):
         # options.headless = True # ! Coursera raises the Google One Tap Error if headless is used!!!
         options.add_argument("--kiosk")
         
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(executable_path=path, options=options)
@@ -205,8 +206,10 @@ def oer_commons_searcher(search_query, slave_queue):
         options.headless = True
         # options.add_argument("--kiosk")
         # options.add_argument('--disable-blink-features=AutomationControlled')
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
         browser = webdriver.Chrome(executable_path=path, options=options)
