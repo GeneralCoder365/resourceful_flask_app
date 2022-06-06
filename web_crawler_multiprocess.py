@@ -962,15 +962,15 @@ def master_urls_to_search(search_queries, dom_queue):
 # ! 35 secs without multiprocessing, 13 secs with multiprocessing
 
 
-if __name__ == '__main__':
-    dom_queue = multiprocessing.Queue()
-    search_queries = [{'search_query': 'math ', 'skill_interest': 'math', 'type_of_opportunity': 'courses', 'in_person_online': 'online'}]
-    dom_process = multiprocessing.Process(target=master_urls_to_search, args=(search_queries, dom_queue))
-    dom_process.start()
-    dom_process.join()
-    final_result = dom_queue.get()
-    dom_process.terminate()
-    dom_queue.close()
-    print("master_urls_to_search: ", final_result)
+# if __name__ == '__main__':
+#     dom_queue = multiprocessing.Queue()
+#     search_queries = [{'search_query': 'math ', 'skill_interest': 'math', 'type_of_opportunity': 'courses', 'in_person_online': 'online'}]
+#     dom_process = multiprocessing.Process(target=master_urls_to_search, args=(search_queries, dom_queue))
+#     dom_process.start()
+#     dom_process.join()
+#     final_result = dom_queue.get()
+#     dom_process.terminate()
+#     dom_queue.close()
+#     print("master_urls_to_search: ", final_result)
 
 # print("master_urls_to_search: ", master_urls_to_search(search_queries))
