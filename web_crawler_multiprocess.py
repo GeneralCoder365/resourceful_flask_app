@@ -42,7 +42,9 @@ def google_searcher(search_query, slave_queue):
         # ! allows chrome/chromedriver to run without crashing on docker image
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_experimental_option('debuggerAddress', 'localhost:9222')
+        # options.add_experimental_option('debuggerAddress', 'localhost:9222') # ! Didn't work
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--test-type")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -122,7 +124,9 @@ def coursera_searcher(search_query, slave_queue):
         
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_experimental_option('debuggerAddress', 'localhost:9222')
+        # options.add_experimental_option('debuggerAddress', 'localhost:9222') # ! Didn't work
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--test-type")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
@@ -211,7 +215,9 @@ def oer_commons_searcher(search_query, slave_queue):
         
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.add_experimental_option('debuggerAddress', 'localhost:9222')
+        # options.add_experimental_option('debuggerAddress', 'localhost:9222') # ! Didn't work
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--test-type")
         
         options.add_argument("window-size=1920,1080") # ! effectively maximizes window since headless doesn't have a fullscreen ability since no window size is known
 
