@@ -119,7 +119,7 @@ def coursera_searcher(search_query, slave_queue):
         # browser = webdriver.Firefox()
         # makes chrome fullscreen
         options = Options()
-        # options.headless = True # ! Coursera raises the Google One Tap Error if headless is used!!!
+        options.headless = True # ! Coursera raises the Google One Tap Error if headless is used!!!
         options.add_argument("--kiosk")
         
         options.add_argument("--no-sandbox")
@@ -864,6 +864,7 @@ def databases_to_search_analyzer(search_dict, sub_queue):
         #         # print("RESULT: ", result)
                 if ((result != False) and (len(result) > 0)):
                     urls_to_search.extend(result)
+                    print("NON-EMPTY RESULT FOR ", skill_interest, " : ", urls_to_search)
                 else:
                     print("FUCK COURSERA THOSE WHORES DESERVE TO DIE!!!!", skill_interest, " : ", urls_to_search)
                 if (result == False):
