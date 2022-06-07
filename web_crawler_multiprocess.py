@@ -891,6 +891,8 @@ def databases_to_search_analyzer(search_dict, sub_queue):
     
     slave_queue.close()
     
+    if (len(urls_to_search) == 0):
+        print("FUCK MEEEE LIST: ", urls_to_search)
     # ! REMOVING DUPLICATE URLS TO SEARCH
     urls_to_search = list(set(urls_to_search))
     
