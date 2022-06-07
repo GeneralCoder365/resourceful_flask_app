@@ -868,6 +868,7 @@ def databases_to_search_analyzer(search_dict, sub_queue):
                     print("FUCK COURSERA THOSE WHORES DESERVE TO DIE!!!!")
             for slv_process in slave_processes:
                 slv_process.terminate()
+            print("STILL WORKINGGGGG!!!! : ", urls_to_search)
             break
         pass
     
