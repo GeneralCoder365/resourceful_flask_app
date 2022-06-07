@@ -865,7 +865,7 @@ def databases_to_search_analyzer(search_dict, sub_queue):
                 if ((result != False) and (len(result) > 0)):
                     urls_to_search.extend(result)
                 else:
-                    print("FUCK COURSERA THOSE WHORES DESERVE TO DIE!!!!")
+                    print("FUCK COURSERA THOSE WHORES DESERVE TO DIE!!!! : ", urls_to_search)
             for slv_process in slave_processes:
                 slv_process.terminate()
             print("STILL WORKINGGGGG!!!! : ", urls_to_search)
