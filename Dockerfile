@@ -1,4 +1,7 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+# FROM tiangolo/uwsgi-nginx-flask:python3.8
+FROM mcr.microsoft.com/azure-functions/python:4-python3.8
+
+USER root
 
 # sets default shell for all commands to /bin/bash instead of /bin/sh
 # SHELL ["/bin/bash", "-c"]
@@ -35,6 +38,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
   && apt-get update -qqy \
   && apt-get -qqy install \
     ${CHROME_VERSION:-google-chrome-stable} \
+    unzip \
   && rm /etc/apt/sources.list.d/google-chrome.list \
   && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
@@ -55,7 +59,8 @@ RUN /bin/bash -c 'LATEST=$`wget -q -O - https://chromedriver.storage.googleapis.
 # 102.0.5005.61
 # ${LATEST}
 # /bin/bash -c `wget http://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip`
-RUN wget http://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip
+# RUN wget http://chromedriver.storage.googleapis.com/102.0.5005.61/chromedriver_linux64.zip
+RUN wget http://chromedriver.storage.googleapis.com/103.0.5060.53/chromedriver_linux64.zip
 # && \  
 RUN unzip chromedriver_linux64.zip && ln -s $PWD/chromedriver /usr/local/bin/chromedriver
 # RUN /bin/bash -c 'wget -q -O - http://chromedriver.storage.googleapis.com/${LATEST}/chromedriver_linux64.zip'
